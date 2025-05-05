@@ -107,8 +107,8 @@ class User extends Authenticatable
         return $this->password;
     }
 
-    public function setPassword(string $value): void
+    public function setPassword(?string $password): void
     {
-        $this->password = $value;
+        $this->password = $password;
     }
 }

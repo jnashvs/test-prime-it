@@ -14,13 +14,5 @@ return new class extends Migration {
             $table->string('description')->nullable();
             $table->timestamps();
         });
-
-        DB::table('appointment_statuses')->insert([
-            ['id' => 1, 'name' => 'requested', 'description' => 'Appointment requested by user'],
-            ['id' => 2, 'name' => 'pending assignment', 'description' => 'Awaiting doctor assignment'],
-            ['id' => 3, 'name' => 'assigned', 'description' => 'Doctor assigned to appointment'],
-            ['id' => 4, 'name' => 'completed', 'description' => 'Appointment completed'],
-            ['id' => 5, 'name' => 'cancelled', 'description' => 'Appointment cancelled'],
-        ]);
     }
 };

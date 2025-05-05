@@ -3,18 +3,31 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\User\EditUserRequest;
+use App\Models\UserType;
+use App\Modules\Exceptions\ValidationException;
+use App\Repositories\User\UserRepositoryInterface;
+use App\Repositories\UserType\UserTypeRepositoryInterface;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+
+    private UserTypeRepositoryInterface $userTypeRepository;
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(
+        UserTypeRepositoryInterface $userTypeRepository,
+        UserRepositoryInterface $userRepository
+    ) {
+        $this->userTypeRepository = $userTypeRepository;
+        $this->userRepository = $userRepository;
+    }
+
     /**
      * Show the registration page.
      */
@@ -27,25 +40,40 @@ class RegisteredUserController extends Controller
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(EditUserRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $userType = $this->validateUserTypeExist(UserType::USER);
+
+        $user = $this->userRepository->create(
+            $userType,
+            $request->input('name'),
+            $request->input('email'),
+            $request->input('password'),
+        );
 
         event(new Registered($user));
 
         Auth::login($user);
 
         return to_route('dashboard');
+    }
+
+    /**
+     * @param int $userTypeId
+     * @return ?UserType
+     * @throws ValidationException
+     */
+    private function validateUserTypeExist(int $userTypeId): ?UserType
+    {
+        $userType = $this->userTypeRepository->getById($userTypeId);
+
+        if (!$userType) {
+            throw new ValidationException("The user type does not exist.");
+        }
+
+        return $userType;
     }
 }

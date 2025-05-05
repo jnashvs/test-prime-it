@@ -9,9 +9,17 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+
     public function register(): void
     {
-        //
+        $arrBindings = [
+            'App\Repositories\UserType\UserTypeRepositoryInterface' => 'App\Repositories\UserType\UserTypeRepository',
+            'App\Repositories\User\UserRepositoryInterface' => 'App\Repositories\User\UserRepository',
+        ];
+
+        foreach ($arrBindings as $interface => $module) {
+            $this->app->bind($interface, $module);
+        }
     }
 
     /**
