@@ -1,0 +1,9 @@
+*.ibd
+*.ibd
+*.ibd
+*.frm
+*.log
+*.xml
+*.iml
+src/.DS_Store
+/db/
