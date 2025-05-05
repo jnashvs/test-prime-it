@@ -1,0 +1,64 @@
+version: '3.8'
+
+networks:
+  prime-it-laravel-network:
+    driver: bridge
+    external: true
+
+services:
+  mariadb-prim-it:
+    image: bitnami/mariadb:10.6.19
+    networks:
+      - prime-it-laravel-network
+    volumes:
+      - ./db:/bitnami/mariadb
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+      MARIADB_USER: db_prime_it_user
+      MARIADB_DATABASE: prime_it_db
+    ports:
+      - "3307:3306"  # MariaDB (host:container)
+
+  phpmyadmin-prim-it:
+    image: phpmyadmin
+    networks:
+      - prime-it-laravel-network
+    ports:
+      - "8083:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=512M
+
+  mailhog-prim-it:
+    image: mailhog/mailhog
+    container_name: 'mailhog-prim-it'
+    networks:
+      - prime-it-laravel-network
+    ports:
+      - "1026:1025"  # SMTP
+      - "8026:8025"  # Mailhog UI
+
+  laravel-prim-it:
+    image: bitnami/laravel:11.0.9
+    networks:
+      - prime-it-laravel-network
+    ports:
+      - "8082:8082"  # Laravel HTTP
+      - "5175:5175"  # Vite dev server
+    volumes:
+      - ./src:/app  # Mount src directory as the app directory inside the container
+      - ./dev/nginx-custom.conf:/opt/bitnami/nginx/conf/server_blocks/custom-nginx.conf
+      - ./dev/php-custom.ini:/opt/bitnami/php/etc/conf.d/custom-php.ini
+    environment:
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_MAX_EXECUTION_TIME: 3600
+      DB_HOST: mariadb-prim-it
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_DATABASE: prime_it_db
+    command: >
+      bash -c "
+        php artisan serve --host=0.0.0.0 --port=8082 &
+        npm install &&
+        npm run dev
+      "
