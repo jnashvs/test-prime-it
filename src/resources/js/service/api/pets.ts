@@ -11,7 +11,6 @@ export const create = async (data: any) => {
 };
 
 export const update = async (id: number, data: any) => {
-    console.log("data: ", data);
     return await putData(`${prefix}/${id}`, data);
 };
 

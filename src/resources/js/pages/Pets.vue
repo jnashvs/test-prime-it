@@ -66,44 +66,14 @@
                 @current-change="handlePageChange"
             ></el-pagination>
 
-            <el-dialog v-model="isModalVisible" append-to-body title="Pet Form">
-                <el-form :model="petForm" :inline="false" label-position="top">
-                    <el-form-item label="Name">
-                        <el-input v-model="petForm.name" style="width: 100%;"></el-input>
-                    </el-form-item>
-                    <el-form-item label="Registration Number">
-                        <el-input v-model="petForm.registration_number" style="width: 100%;"></el-input>
-                    </el-form-item>
-                    <el-form-item label="Animal Type">
-                        <el-select v-model="petForm.animal_type_id" placeholder="Select Animal Type" style="width: 100%;">
-                            <el-option
-                                v-for="type in animalTypes"
-                                :key="type.id"
-                                :label="type.name"
-                                :value="type.id"
-                            ></el-option>
-                        </el-select>
-                    </el-form-item>
-                    <el-form-item label="Breed">
-                        <el-input v-model="petForm.breed" style="width: 100%;"></el-input>
-                    </el-form-item>
-                    <el-form-item label="Date of Birth">
-                        <el-date-picker
-                            v-model="petForm.date_of_birth"
-                            value-format="YYYY-MM-DD"
-                            placeholder="Date of birth"
-                            format="DD/MM/YYYY"
-                            type="date"
-                            style="width: 100%;"
-                            :disabled-date="disabledDates"
-                        ></el-date-picker>
-                    </el-form-item>
-                </el-form>
-                <span slot="footer" class="dialog-footer">
-                    <el-button @click="isModalVisible = false">Cancel</el-button>
-                    <el-button type="primary" :disabled="loading" @click="savePet()">Save</el-button>
-                </span>
-            </el-dialog>
+            <CreateUpdatePet
+                :isVisible="isModalVisible"
+                :petForm="petForm"
+                :animalTypes="animalTypes"
+                :disabledDates="disabledDates"
+                @update:isVisible="isModalVisible = $event"
+                @refreshPets="loadPets"
+            />
         </div>
     </AppLayout>
 </template>
@@ -115,6 +85,7 @@ import { Head } from '@inertiajs/vue3';
 import * as animalTypeService from '@/service/api/animal-types';
 import * as petService from '@/service/api/pets';
 import { ElNotification } from 'element-plus';
+import CreateUpdatePet from '@/components/CreateUpdatePet.vue';
 
 const breadcrumbs = [
     {
@@ -209,39 +180,6 @@ const loadAnimalTypes = async () => {
         }
     } catch (error) {
         console.log('Error loading animal types:', error);
-    }
-    loading.value = false;
-};
-
-const savePet = async () => {
-    loading.value = true;
-    try {
-        if (petForm.value.id) {
-            // Update existing pet
-            await petService.update(petForm.value.id, petForm.value);
-            ElNotification({
-                title: 'Success',
-                message: 'Pet updated successfully!',
-                type: 'success',
-            });
-        } else {
-            // Create new pet
-            await petService.create(petForm.value);
-            ElNotification({
-                title: 'Success',
-                message: 'Pet created successfully!',
-                type: 'success',
-            });
-        }
-        await loadPets();
-        isModalVisible.value = false;
-    } catch (error) {
-        ElNotification({
-            title: 'Error',
-            message: 'Failed to save pet.',
-            type: 'error',
-        });
-        console.log('Failed to save pet:', error);
     }
     loading.value = false;
 };
