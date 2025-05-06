@@ -11,25 +11,35 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        User::create([
-            'name' => 'Receptionist',
-            'email' => 'receptionist@patusco.com',
-            'password' => Hash::make('password'),
-            'user_type_id' => UserType::RECEPTIONIST,
-        ]);
+        // Create 3 receptionists for tet usage
+        for ($i = 1; $i <= 3; $i++) {
+            $receptionist = User::create([
+                'name' => "Receptionist $i",
+                'email' => "receptionist$i@patusco.com",
+                'password' => Hash::make('password'),
+                'user_type_id' => UserType::RECEPTIONIST,
+            ]);
+            $receptionist->assignRole('receptionist');
+        }
 
-        User::create([
-            'name' => 'Dr. Patusco',
-            'email' => 'doctor@patusco.com',
-            'password' => Hash::make('password'),
-            'user_type_id' => UserType::DOCTOR,
-        ]);
+        // Create 5 doctors for test usage
+        for ($i = 1; $i <= 5; $i++) {
+            $doctor = User::create([
+                'name' => "Dr. Patusco $i",
+                'email' => "doctor$i@patusco.com",
+                'password' => Hash::make('password'),
+                'user_type_id' => UserType::DOCTOR,
+            ]);
+            $doctor->assignRole('doctor');
+        }
 
-        User::create([
+        // Create a user
+        $user = User::create([
             'name' => 'John Doe',
             'email' => 'user@patusco.com',
             'password' => Hash::make('password'),
             'user_type_id' => UserType::USER,
         ]);
+        $user->assignRole('user');
     }
 }

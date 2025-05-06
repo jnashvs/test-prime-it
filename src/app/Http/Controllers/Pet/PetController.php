@@ -14,7 +14,9 @@ use App\Modules\Exceptions\ValidationException;
 use App\Repositories\AnimalType\AnimalTypeRepositoryInterface;
 use App\Repositories\Pet\PetRepositoryInterface;
 use App\Repositories\User\UserRepositoryInterface;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PetController extends Controller
 {
@@ -33,24 +35,32 @@ class PetController extends Controller
         $this->userRepository = $userRepository;
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function index(GetPetPagedRequest $request)
     {
         $values = $this->petRepository->get($request);
-
         return $this->apiResponsePages(PetResource::collection($values['rows']), $values['count']);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function getById(int $id)
     {
+        $this->authorize('view all appointments');
         return new PetResource($this->petRepository->getById($id));
     }
 
     /**
      * @throws FatalModuleException
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function create(EditPetRequest $request)
     {
+        $this->authorize('create appointments');
         $animalType = $this->validateAnimalType($request->input('animal_type_id'));
         $user = $this->validateUser();
 
@@ -61,7 +71,6 @@ class PetController extends Controller
             $request->input('registration_number'),
             $request->input('date_of_birth'),
             $request->input('breed'),
-
         );
 
         return $this->apiResponse(new PetResource($pet));
@@ -70,9 +79,11 @@ class PetController extends Controller
     /**
      * @throws FatalModuleException
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function update(EditPetRequest $request, int $id)
     {
+        $this->authorize('edit appointments');
         $pet = $this->validatePet($id);
         $animalType = $this->validateAnimalType($request->input('animal_type_id'));
 
@@ -93,9 +104,11 @@ class PetController extends Controller
 
     /**
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function delete(int $id)
     {
+        $this->authorize('delete appointments');
         $pet = $this->validatePet($id);
         return $this->apiResponse($this->petRepository->delete($pet));
     }

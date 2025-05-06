@@ -7,8 +7,10 @@ use App\Models\AnimalType;
 use App\Models\Factories\Pet\PetFactory;
 use App\Models\Pet;
 use App\Models\User;
+use App\Models\UserType;
 use App\Modules\Exceptions\FatalRepositoryException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth; // Added for accessing authenticated user
 
 class PetRepository implements PetRepositoryInterface
 {
@@ -45,16 +47,25 @@ class PetRepository implements PetRepositoryInterface
         $dateFrom = $request->input('dateFrom');
         $dateTo = $request->input('dateTo');
 
+        $ownerIdToFilter = null;
+        /** @var User $authenticatedUser */
+        $authenticatedUser = Auth::user();
+
+        if ($authenticatedUser && $authenticatedUser->isUser()) {
+            $ownerIdToFilter = $authenticatedUser->getId();
+        }
+
         return $this->petFactory->getFilter(
             $searchKeyword,
             $columns,
-            $pageIndex - 1,
+            $pageIndex > 0 ? $pageIndex - 1 : 0,
             $pageSize,
             $sortBy,
             $sortDesc,
             $typeId,
             $dateFrom,
-            $dateTo
+            $dateTo,
+            $ownerIdToFilter
         );
     }
 

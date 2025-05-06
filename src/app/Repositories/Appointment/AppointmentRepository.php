@@ -9,7 +9,6 @@ use App\Models\Appointment;
 use App\Models\Pet;
 use App\Models\User;
 use App\Modules\Exceptions\FatalRepositoryException;
-use Illuminate\Database\Eloquent\Collection;
 
 class AppointmentRepository implements AppointmentRepositoryInterface
 {

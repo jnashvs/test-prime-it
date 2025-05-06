@@ -46,18 +46,20 @@ services:
       - "8082:8082"  # Laravel HTTP
       - "5175:5175"  # Vite dev server
     volumes:
-      - ./src:/app  # Mount src directory as the app directory inside the container
-      - ./dev/nginx-custom.conf:/opt/bitnami/nginx/conf/server_blocks/custom-nginx.conf
-      - ./dev/php-custom.ini:/opt/bitnami/php/etc/conf.d/custom-php.ini
+      - ./src:/app    # Mount your source code into the container
     environment:
+      VITE_PORT: 5175
+      VITE_HOST: "0.0.0.0"
       PHP_MEMORY_LIMIT: 1024M
       PHP_MAX_EXECUTION_TIME: 3600
       DB_HOST: mariadb-prim-it
       DB_PORT: 3306
       DB_USERNAME: root
       DB_DATABASE: prime_it_db
+    working_dir: /app  # Set the working directory
     command: >
       bash -c "
+        composer install &&
         php artisan serve --host=0.0.0.0 --port=8082 &
         npm install &&
         npm run dev

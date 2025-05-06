@@ -5,23 +5,18 @@ namespace App\Http\Controllers\Appointment;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Appointment\EditAppointmentRequest;
 use App\Http\Requests\Appointment\GetAppointmentPagedRequest;
-use App\Http\Requests\Pet\EditPetRequest;
-use App\Http\Requests\Pet\GetPetPagedRequest;
 use App\Http\Resources\Appointment\AppointmentResource;
-use App\Http\Resources\Pet\PetResource;
-use App\Models\AnimalType;
 use App\Models\Appointment;
 use App\Models\AppointmentStatus;
 use App\Models\Pet;
 use App\Models\User;
 use App\Modules\Exceptions\FatalModuleException;
 use App\Modules\Exceptions\ValidationException;
-use App\Repositories\AnimalType\AnimalTypeRepositoryInterface;
 use App\Repositories\Appointment\AppointmentRepositoryInterface;
 use App\Repositories\AppointmentStatus\AppointmentStatusRepositoryInterface;
 use App\Repositories\Pet\PetRepositoryInterface;
 use App\Repositories\User\UserRepositoryInterface;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class AppointmentController extends Controller
 {
@@ -43,8 +38,12 @@ class AppointmentController extends Controller
         $this->appointmentStatusRepository = $appointmentStatusRepository;
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function index(GetAppointmentPagedRequest $request)
     {
+        $this->authorize('view all appointments');
         $values = $this->appointmentRepository->get($request);
 
         return $this->apiResponsePages(AppointmentResource::collection($values['rows']), $values['count']);
@@ -52,9 +51,11 @@ class AppointmentController extends Controller
 
     /**
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function getById(int $id)
     {
+        $this->authorize('view all appointments');
         $appointment = $this->validateAppointment($id);
         return new AppointmentResource($appointment);
     }
@@ -62,9 +63,11 @@ class AppointmentController extends Controller
     /**
      * @throws FatalModuleException
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function create(EditAppointmentRequest $request)
     {
+        $this->authorize('create appointments');
         $pet = $this->validatePet($request->input('pet_id'));
         $doctor = $this->validateDoctor($request->input('doctor_id'));
         $appointmentStatus = $this->validateAppointmentStatus($request->input('status_id'));
@@ -86,9 +89,11 @@ class AppointmentController extends Controller
     /**
      * @throws FatalModuleException
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function update(EditAppointmentRequest $request, int $id)
     {
+        $this->authorize('edit appointments');
         $appointment = $this->validateAppointment($id);
         $pet = $this->validatePet($request->input('pet_id'));
         $doctor = $this->validateDoctor($request->input('doctor_id'));
@@ -111,9 +116,11 @@ class AppointmentController extends Controller
 
     /**
      * @throws ValidationException
+     * @throws AuthorizationException
      */
     public function delete(int $id)
     {
+        $this->authorize('delete appointments');
         $appointment = $this->validateAppointment($id);
         return $this->apiResponse($this->appointmentRepository->delete($appointment));
     }

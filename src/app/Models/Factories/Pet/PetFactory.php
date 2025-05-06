@@ -93,11 +93,17 @@ class PetFactory extends AbstractFactory
         bool $sortDesc,
         ?int $typeId,
         ?string $dateFrom,
-        ?string $dateTo
+        ?string $dateTo,
+        ?int $ownerId = null // Added new parameter for ownerId
     ): mixed {
 
         try {
             $query = Pet::query();
+
+            // Add owner_id filter if provided
+            if ($ownerId !== null) {
+                $query->where('owner_id', $ownerId);
+            }
 
             if ($searchKeyword) {
                 $query->where(function ($q) use ($searchKeyword, $columns) {

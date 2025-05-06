@@ -54,9 +54,13 @@ class RegisteredUserController extends Controller
             $request->input('password'),
         );
 
+        $user->assignRole('user');
+
         event(new Registered($user));
 
         Auth::login($user);
+
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return to_route('dashboard');
     }
