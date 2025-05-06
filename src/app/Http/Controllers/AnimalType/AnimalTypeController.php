@@ -17,11 +17,11 @@ class AnimalTypeController extends Controller
 
     public function index()
     {
-        return AnimalTypeResource::collection($this->animalTypeRepository->getAll());
+        return $this->apiResponse(AnimalTypeResource::collection($this->animalTypeRepository->getAll()));
     }
 
     public function getById(int $id)
     {
-        return new AnimalTypeResource($this->animalTypeRepository->getById($id));
+        return $this->apiResponse(new AnimalTypeResource($this->animalTypeRepository->getById($id)));
     }
 }

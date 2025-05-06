@@ -23,6 +23,7 @@ class PetResource extends BaseResource
         return [
             'id' => $item->getId(),
             'name' => $item->getName(),
+            'breed' => $item->getBreed(),
             'registration_number' => $item->getRegistrationNumber(),
             'animal_type_id' => $item->getAnimalTypeId(),
             'animal_type' => new AnimalTypeResource($item->animalType),

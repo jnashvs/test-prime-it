@@ -111,4 +111,19 @@ class User extends Authenticatable
     {
         $this->password = $password;
     }
+
+    public function isUser(): bool
+    {
+        return $this->user_type_id === UserType::USER;
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->user_type_id === UserType::DOCTOR;
+    }
+
+    public function isReceptionist(): bool
+    {
+        return $this->user_type_id === UserType::RECEPTIONIST;
+    }
 }

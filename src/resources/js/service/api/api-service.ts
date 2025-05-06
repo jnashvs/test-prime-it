@@ -51,7 +51,12 @@ export const postData = <T>(path: string, data: any, isMultipart = true, options
             : { headers: options.headers, ...options })
     );
 
-export const putData = <T>(path: string, data: any, isMultipart = true) =>
-    handleResponse<T>(axios.put('/api/v1' + path, data, isMultipart ? multipartHeader : undefined));
+export const putData = <T>(path: string, data: any, isMultipart = true, options: AxiosRequestConfig = {}) =>
+    handleResponse<T>(
+        axios.put('/api/v1' + path, data, {
+            headers: isMultipart ? mergeHeaders(multipartHeader, options.headers) : options.headers,
+            ...options
+        })
+    );
 
 export const deleteData = <T>(path: string) => handleResponse<T>(axios.delete('/api/v1' + path));

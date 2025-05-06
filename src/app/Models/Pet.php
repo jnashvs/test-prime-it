@@ -17,6 +17,7 @@ class Pet extends Model
         'animal_type_id',
         'date_of_birth',
         'owner_id',
+        'breed',
     ];
 
     // Relationships
@@ -75,6 +76,16 @@ class Pet extends Model
     public function setDateOfBirth(?string $dateOfBirth): void
     {
         $this->date_of_birth = $dateOfBirth;
+    }
+
+    public function getBreed(): ?string
+    {
+        return $this->breed;
+    }
+
+    public function setBreed(?string $breed): void
+    {
+        $this->breed = $breed;
     }
 
     public function getAge(): ?int

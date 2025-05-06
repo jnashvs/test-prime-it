@@ -16,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
             'App\Repositories\UserType\UserTypeRepositoryInterface' => 'App\Repositories\UserType\UserTypeRepository',
             'App\Repositories\User\UserRepositoryInterface' => 'App\Repositories\User\UserRepository',
             'App\Repositories\AnimalType\AnimalTypeRepositoryInterface' => 'App\Repositories\AnimalType\AnimalTypeRepository',
+            'App\Repositories\Pet\PetRepositoryInterface' => 'App\Repositories\Pet\PetRepository',
         ];
 
         foreach ($arrBindings as $interface => $module) {

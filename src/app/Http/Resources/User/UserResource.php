@@ -6,7 +6,6 @@ use App\Http\Resources\BaseResource;
 use App\Http\Resources\Pet\PetResource;
 use App\Http\Resources\UserType\UserTypeResource;
 use App\Models\User;
-use App\Models\UserType;
 
 class UserResource extends BaseResource
 {
@@ -29,7 +28,6 @@ class UserResource extends BaseResource
             'user_type_id' => $item->getUserTypeId(),
             'user_type' => new UserTypeResource($item->userType),
             'email_verified_at' => $item->getEmailVerifiedAt(),
-            'pets' => new PetResource($item->pets)
         ];
     }
 }

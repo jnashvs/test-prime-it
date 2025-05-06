@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserType;
 use App\Modules\Exceptions\FatalModuleException;
 use App\Modules\Exceptions\FatalRepositoryException;
+use Illuminate\Support\Facades\Auth;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -114,5 +115,17 @@ class UserRepository implements UserRepositoryInterface
     public function delete(User $user): bool
     {
         return $this->userFactory->delete($user);
+    }
+
+    public function getCurrentUser(): ?User
+    {
+        /** User $user */
+        $user = Auth::user();
+
+        if (!$user) {
+            throw new FatalModuleException("User is not authenticated");
+        }
+
+        return $this->userFactory->getById($user->getId());
     }
 }
