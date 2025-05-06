@@ -19,6 +19,11 @@ const mainNavItems: NavItem[] = [
         href: '/pets',
         icon: LayoutGrid,
     },
+    {
+        title: 'Appointments',
+        href: '/appointments',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [];
