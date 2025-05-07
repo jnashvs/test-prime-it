@@ -5,9 +5,6 @@
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <el-row :gutter="20">
                 <el-col :span="4">
-                    <el-button type="primary" :disabled="loading" @click="openModal()">Add Appointment</el-button>
-                </el-col>
-                <el-col :span="4">
                     <el-select v-model="selectedAnimalType" @change="loadAppointments" :disabled="loading" placeholder="Select Animal Type">
                         <el-option value="">All</el-option>
                         <el-option
@@ -28,10 +25,7 @@
                         placeholder="Select Date"
                     ></el-date-picker>
                 </el-col>
-            </el-row>
-
-            <el-row :gutter="20">
-                <el-col :span="12">
+                <el-col :span="4">
                     <el-input
                         v-model="searchQuery"
                         @input="loadAppointments"
@@ -39,6 +33,18 @@
                         clearable
                         style="width: 100%;"
                     ></el-input>
+                </el-col>
+            </el-row>
+
+            <el-row v-if="user && (user.user_type_id === 1 || user.user_type_id === 3)" :gutter="20">
+                <el-col :span="6">
+                    <el-button
+                        type="primary"
+                        :disabled="loading"
+                        @click="openModal()"
+                    >
+                        Add Appointment
+                    </el-button>
                 </el-col>
             </el-row>
 
@@ -52,8 +58,18 @@
                 <el-table-column prop="symptoms" label="Symptoms" width="180"></el-table-column>
                 <el-table-column label="Actions" width="180">
                     <template #default="scope">
-                        <el-button @click="openModal(scope.row)">Edit</el-button>
-                        <el-button type="danger" @click="deleteAppointment(scope.row.id)">Delete</el-button>
+                        <el-button
+                            @click="openModal(scope.row)"
+                        >
+                            Edit
+                        </el-button>
+                        <el-button
+                            v-if="user && user.user_type_id === 1"
+                            type="danger"
+                            @click="deleteAppointment(scope.row.id)"
+                        >
+                            Delete
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -73,6 +89,7 @@
                 :pets="pets"
                 :doctors="doctors"
                 :disabledDates="disabledDates"
+                :user="user"
                 @update:isVisible="isModalVisible = $event"
                 @refreshAppointments="loadAppointments"
             />
@@ -83,13 +100,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import * as animalTypeService from '@/service/api/animal-types';
 import * as doctorService from '@/service/api/doctors';
 import * as appointmentService from '@/service/api/appointments';
 import * as petService from '@/service/api/pets';
 import { ElNotification } from 'element-plus';
 import CreateUpdateAppointment from '@/components/CreateUpdateAppointment.vue';
+import { type SharedData, type User } from '@/types';
+
+const page = usePage<SharedData>();
+const user = page.props.auth.user as User;
 
 const breadcrumbs = [
     {
@@ -112,7 +133,7 @@ const appointments = ref([]);
 const doctors = ref([]);
 const pets = ref([]);
 const selectedAnimalType = ref(null);
-const selectedDate = ref(null); // Changed from date range to single date
+const selectedDate = ref(null);
 const searchQuery = ref();
 const isModalVisible = ref(false);
 const appointmentForm = ref({
@@ -135,7 +156,7 @@ const serverOptions = ref({
 const params = ref({
     search: null,
     animalTypeId: null,
-    date: null, // Changed from date range to single date
+    date: null,
 });
 
 const totalItems = ref(0);
@@ -144,7 +165,7 @@ const loadAppointments = async () => {
     loading.value = true;
     params.value.search = searchQuery.value || '';
     params.value.animalTypeId = selectedAnimalType.value || null;
-    params.value.date = selectedDate.value || null; // Use single date
+    params.value.date = selectedDate.value || null;
 
     try {
         const result = await appointmentService.get({

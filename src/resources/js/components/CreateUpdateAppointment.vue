@@ -11,7 +11,7 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="Doctor">
+            <el-form-item v-if="props.user && props.user.user_type_id === 1" label="Doctor">
                 <el-select v-model="appointmentForm.doctor_id" placeholder="Select Doctor" style="width: 100%;">
                     <el-option
                         v-for="doctor in doctors"
@@ -38,13 +38,14 @@
                     <el-option label="Afternoon" value="afternoon"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="Status">
+            <el-form-item v-if="props.user && (props.user.user_type_id === 1 || props.user.user_type_id === 2)" label="Status">
                 <el-select v-model="appointmentForm.status_id" placeholder="Select Status" style="width: 100%;">
-                    <el-option label="Requested" :value="1"></el-option>
-                    <el-option label="Pending Assignment" :value="2"></el-option>
-                    <el-option label="Assigned" :value="3"></el-option>
-                    <el-option label="Completed" :value="4"></el-option>
-                    <el-option label="Cancelled" :value="5"></el-option>
+                    <el-option
+                        v-for="status in availableStatuses"
+                        :key="status.value"
+                        :label="status.label"
+                        :value="status.value"
+                    ></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="Symptoms">
@@ -59,9 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, watch } from 'vue';
+import { ref, defineProps, defineEmits, watch, computed } from 'vue';
 import { ElNotification } from 'element-plus';
 import * as appointmentService from '@/service/api/appointments';
+import { type User } from '@/types';
 
 const props = defineProps({
     isVisible: Boolean,
@@ -69,12 +71,36 @@ const props = defineProps({
     pets: Array,
     doctors: Array,
     disabledDates: Function,
+    user: {
+        type: Object as () => User,
+        required: true
+    }
 });
 
 const emit = defineEmits(['update:isVisible', 'refreshAppointments']);
 
 const loading = ref(false);
 const localVisible = ref(props.isVisible);
+
+const allStatuses = [
+    { label: "Requested", value: 1 },
+    { label: "Pending Assignment", value: 2 },
+    { label: "Assigned", value: 3 },
+    { label: "Completed", value: 4 },
+    { label: "Cancelled", value: 5 },
+];
+
+// user_type_id === 1 -> receptionist
+// user_type_id === 2 -> doctor
+const availableStatuses = computed(() => {
+    if (props.user && props.user.user_type_id === 1) {
+        return allStatuses;
+    }
+    if (props.user && props.user.user_type_id === 2) {
+        return allStatuses.filter(status => status.value === 4 || status.value === 5);
+    }
+    return [];
+});
 
 watch(() => props.isVisible, (newVal) => {
     localVisible.value = newVal;
