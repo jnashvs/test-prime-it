@@ -57,8 +57,8 @@
                 </el-table-column>
             </el-table>
 
-            <!-- Add pagination component -->
             <el-pagination
+                v-if="totalItems > 0"
                 v-model:current-page="serverOptions.page"
                 :page-size="serverOptions.rowsPerPage"
                 :total="totalItems"
