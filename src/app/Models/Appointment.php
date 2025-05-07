@@ -53,6 +53,11 @@ class Appointment extends Model
         return $this->pet_id;
     }
 
+    public function getPet(): ?Pet
+    {
+        return $this->pet;
+    }
+
     public function setPet(Pet $pet): void
     {
         $this->pet_id = $pet->getId();
@@ -61,6 +66,11 @@ class Appointment extends Model
     public function getDoctorId(): ?int
     {
         return $this->doctor_id;
+    }
+
+    public function getDoctor(): ?User
+    {
+        return $this->doctor;
     }
 
     public function setDoctor(?User $user): void
@@ -101,6 +111,11 @@ class Appointment extends Model
     public function getStatusId(): ?int
     {
         return $this->status_id;
+    }
+
+    public function getStatus(): ?AppointmentStatus
+    {
+        return $this->status;
     }
 
     public function setStatus(?AppointmentStatus $status): void

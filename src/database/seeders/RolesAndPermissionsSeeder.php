@@ -10,10 +10,8 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
-        // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Define permissions
         $permissions = [
             'assign appointments',
             'view all appointments',
@@ -35,7 +33,6 @@ class RolesAndPermissionsSeeder extends Seeder
             );
         }
 
-        // Define roles and their permissions
         $roles = [
             'doctor' => [
                 'view all appointments',
@@ -54,6 +51,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create appointments',
                 'edit appointments',
                 'view all pets',
+                'create pets',
                 'edit pets',
                 'delete pets',
             ],

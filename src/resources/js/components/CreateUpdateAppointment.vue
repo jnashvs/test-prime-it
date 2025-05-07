@@ -116,16 +116,21 @@ const closeDialog = () => {
 
 const saveAppointment = async () => {
     loading.value = true;
+    const payload = { ...props.appointmentForm };
+
     try {
-        if (props.appointmentForm.id) {
-            await appointmentService.update(props.appointmentForm.id, props.appointmentForm);
+        if (payload.id) {
+            await appointmentService.update(payload.id, payload);
             ElNotification({
                 title: 'Success',
                 message: 'Appointment updated successfully!',
                 type: 'success',
             });
         } else {
-            await appointmentService.create(props.appointmentForm);
+            await appointmentService.create({
+                ...payload,
+                status_id: payload.status_id ?? 1,
+            });
             ElNotification({
                 title: 'Success',
                 message: 'Appointment created successfully!',

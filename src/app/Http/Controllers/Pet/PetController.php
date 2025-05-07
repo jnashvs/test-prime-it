@@ -40,6 +40,7 @@ class PetController extends Controller
      */
     public function index(GetPetPagedRequest $request)
     {
+        $this->authorize('view all appointments');
         $values = $this->petRepository->get($request);
         return $this->apiResponsePages(PetResource::collection($values['rows']), $values['count']);
     }
@@ -49,7 +50,7 @@ class PetController extends Controller
      */
     public function getById(int $id)
     {
-        $this->authorize('view all appointments');
+        $this->authorize('view all pets');
         return new PetResource($this->petRepository->getById($id));
     }
 
@@ -60,7 +61,7 @@ class PetController extends Controller
      */
     public function create(EditPetRequest $request)
     {
-        $this->authorize('create appointments');
+        $this->authorize('create pets');
         $animalType = $this->validateAnimalType($request->input('animal_type_id'));
         $user = $this->validateUser();
 
@@ -83,7 +84,7 @@ class PetController extends Controller
      */
     public function update(EditPetRequest $request, int $id)
     {
-        $this->authorize('edit appointments');
+        $this->authorize('edit pets');
         $pet = $this->validatePet($id);
         $animalType = $this->validateAnimalType($request->input('animal_type_id'));
 
@@ -108,8 +109,13 @@ class PetController extends Controller
      */
     public function delete(int $id)
     {
-        $this->authorize('delete appointments');
+        $this->authorize('delete pets');
         $pet = $this->validatePet($id);
+
+        if ($pet->appointments()->exists()) {
+            throw new AuthorizationException('This pet cannot be deleted because it is associated with one or more appointments.');
+        }
+
         return $this->apiResponse($this->petRepository->delete($pet));
     }
 

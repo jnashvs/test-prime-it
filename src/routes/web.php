@@ -4,7 +4,12 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
-Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('appointments');
+    }
+    return redirect()->route('login');
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');

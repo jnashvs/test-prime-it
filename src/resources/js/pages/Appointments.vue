@@ -75,6 +75,7 @@
             </el-table>
 
             <el-pagination
+                v-if="totalItems > 0"
                 v-model:current-page="serverOptions.page"
                 :page-size="serverOptions.rowsPerPage"
                 :total="totalItems"
@@ -140,10 +141,10 @@ const appointmentForm = ref({
     id: null,
     pet_id: null,
     doctor_id: null,
-    date: '',
-    time_of_day: '',
+    date: null,
+    time_of_day: null,
     status_id: null,
-    symptoms: '',
+    symptoms: null,
 });
 
 const serverOptions = ref({

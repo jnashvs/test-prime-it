@@ -68,16 +68,26 @@ class AppointmentController extends Controller
     public function create(EditAppointmentRequest $request)
     {
         $this->authorize('create appointments');
-        $pet = $this->validatePet($request->input('pet_id'));
-        $doctor = $this->validateDoctor($request->input('doctor_id'));
-        $appointmentStatus = $this->validateAppointmentStatus($request->input('status_id'));
         $user = $this->validateUser();
+        $pet = $this->validatePet($request->input('pet_id'));
+
+        $doctorId = $request->input('doctor_id');
+        $statusId = $request->input('status_id', AppointmentStatus::REQUESTED);
+
+        $doctor = null;
+
+        if ($user->isReceptionist() && $user->hasRole('receptionist')) {
+            $doctor = $doctorId ? $this->validateDoctor($doctorId) : null;
+            $status = $this->validateAppointmentStatus($statusId);
+        } else {
+            $status = $this->appointmentStatusRepository->getById(AppointmentStatus::REQUESTED);
+        }
 
         $appointment = $this->appointmentRepository->create(
             $pet,
             $doctor,
             $user,
-            $appointmentStatus,
+            $status,
             $request->input('date'),
             $request->input('symptoms'),
             $request->input('time_of_day'),
@@ -94,21 +104,60 @@ class AppointmentController extends Controller
     public function update(EditAppointmentRequest $request, int $id)
     {
         $this->authorize('edit appointments');
+
         $appointment = $this->validateAppointment($id);
-        $pet = $this->validatePet($request->input('pet_id'));
-        $doctor = $this->validateDoctor($request->input('doctor_id'));
-        $appointmentStatus = $this->validateAppointmentStatus($request->input('status_id'));
         $user = $this->validateUser();
+
+        $pet = $appointment->getPet();
+        $doctor = $appointment->getDoctor();
+        $status = $appointment->getStatus();
+        $date = $request->input('date');
+        $symptoms = $request->input('symptoms');
+        $timeOfDay = $request->input('time_of_day');
+
+        if ($user->isDoctor() && $user->hasRole('doctor')) {
+            if ($appointment->getDoctorId() !== $user->getId()) {
+                throw new AuthorizationException("You can only update appointments that are assigned to you.");
+            }
+
+            $statusId = $request->input('status_id');
+            if (!in_array($statusId, [AppointmentStatus::COMPLETED, AppointmentStatus::CANCELLED])) {
+                throw new ValidationException("As a doctor, you can only set the appointment status to Completed or Cancelled.");
+            }
+
+            $status = $this->validateAppointmentStatus($statusId);
+            $pet = $this->validatePet($request->input('pet_id'));
+
+        } elseif ($user->isUser() && $user->hasRole('user')) {
+
+            if ($pet->getOwnerId() !== $user->getId()) {
+                throw new AuthorizationException("You can only update appointments for your own pets.");
+            }
+
+        } elseif ($user->isReceptionist() && $user->hasRole('receptionist')) {
+            $pet = $this->validatePet($request->input('pet_id'));
+            $status = $this->validateAppointmentStatus($request->input('status_id'));
+            $doctorId = $request->input('doctor_id');
+
+            if ($doctorId !== null) {
+                $doctor = $this->validateDoctor($doctorId);
+            } else {
+                $doctor = null;
+            }
+
+        } else {
+            throw new AuthorizationException("Your user role does not have the necessary permissions to update appointments in this manner.");
+        }
 
         $appointment = $this->appointmentRepository->update(
             $appointment,
             $pet,
             $doctor,
             $user,
-            $appointmentStatus,
-            $request->input('date'),
-            $request->input('symptoms'),
-            $request->input('time_of_day')
+            $status,
+            $date,
+            $symptoms,
+            $timeOfDay
         );
 
         return $this->apiResponse(new AppointmentResource($appointment));

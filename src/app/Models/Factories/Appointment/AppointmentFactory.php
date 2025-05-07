@@ -20,22 +20,22 @@ class AppointmentFactory extends AbstractFactory
 
     /**
      * @param Pet $pet
-     * @param User $doctor
+     * @param ?User $doctor
      * @param User $createdBy
      * @param AppointmentStatus $status
      * @param string $date
-     * @param string $symptoms
+     * @param ?string $symptoms
      * @param ?string $timeOfDay
      * @return Appointment
      * @throws FatalRepositoryException
      */
     public function create(
         Pet $pet,
-        User $doctor,
+        ?User $doctor,
         User $createdBy,
         AppointmentStatus $status,
         string $date,
-        string $symptoms,
+        ?string $symptoms,
         ?string $timeOfDay,
     ): Appointment
     {
@@ -57,11 +57,11 @@ class AppointmentFactory extends AbstractFactory
     /**
      * @param Appointment $appointment
      * @param Pet $pet
-     * @param User $doctor
+     * @param ?User $doctor
      * @param User $createdBy
      * @param AppointmentStatus $status
      * @param string $date
-     * @param string $symptoms
+     * @param ?string $symptoms
      * @param ?string $timeOfDay
      * @return Appointment
      * @throws FatalRepositoryException
@@ -69,11 +69,11 @@ class AppointmentFactory extends AbstractFactory
     public function update(
         Appointment $appointment,
         Pet $pet,
-        User $doctor,
+        ?User $doctor,
         User $createdBy,
         AppointmentStatus $status,
         string $date,
-        string $symptoms,
+        ?string $symptoms,
         ?string $timeOfDay,
     ): Appointment
     {
@@ -116,7 +116,7 @@ class AppointmentFactory extends AbstractFactory
             if ($authUser) {
                 if ($authUser->hasRole('doctor')) {
                     $query->where('doctor_id', $authUser->getId());
-                } elseif ($authUser->hasRole('user')) { // Assuming 'user' is the role for pet owners
+                } elseif ($authUser->hasRole('user')) {
                     $query->whereHas('pet', function ($petQuery) use ($authUser) {
                         $petQuery->where('owner_id', $authUser->getId());
                     });
@@ -145,11 +145,11 @@ class AppointmentFactory extends AbstractFactory
                     });
 
                     $q->orWhereHas('doctor', function ($docQuery) use ($searchKeyword) {
-                        $docQuery->where('name', 'LIKE', '%' . $searchKeyword . '%'); // Assumes User model has 'name'
+                        $docQuery->where('name', 'LIKE', '%' . $searchKeyword . '%');
                     });
 
                     $q->orWhereHas('status', function ($statusQuery) use ($searchKeyword) {
-                        $statusQuery->where('name', 'LIKE', '%' . $searchKeyword . '%'); // Assumes AppointmentStatus model has 'name'
+                        $statusQuery->where('name', 'LIKE', '%' . $searchKeyword . '%');
                     });
                 });
             }
