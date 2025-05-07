@@ -24,10 +24,10 @@ interface UserRepositoryInterface
     public function getByEmail(string $email): ?User;
 
     /**
-     * @param string $email
+     * @param UserType $userType
      * @return bool
      */
-    public function exists(string $email): bool;
+    public function getByType(UserType $userType): mixed;
 
     /**
      * @return mixed

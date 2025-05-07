@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Modules\Exceptions\FatalRepositoryException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Auth;
 class AppointmentFactory extends AbstractFactory
 {
     public function __construct()
@@ -105,13 +105,52 @@ class AppointmentFactory extends AbstractFactory
     ): mixed {
 
         try {
-            $query = Appointment::query();
+            $query = Appointment::query()->with([
+                'pet.owner',
+                'doctor',
+                'status'
+            ]);
+
+            $authUser = Auth::user();
+
+            if ($authUser) {
+                if ($authUser->hasRole('doctor')) {
+                    $query->where('doctor_id', $authUser->getId());
+                } elseif ($authUser->hasRole('user')) { // Assuming 'user' is the role for pet owners
+                    $query->whereHas('pet', function ($petQuery) use ($authUser) {
+                        $petQuery->where('owner_id', $authUser->getId());
+                    });
+                } elseif ($authUser->hasRole('receptionist')) {
+                    if ($assignedUserId) {
+                        $query->where('doctor_id', $assignedUserId);
+                    }
+                } else {
+                    if ($assignedUserId) {
+                        $query->where('doctor_id', $assignedUserId);
+                    }
+                }
+            } else {
+                if ($assignedUserId) {
+                    $query->where('doctor_id', $assignedUserId);
+                }
+            }
 
             if ($searchKeyword) {
-                $query->where(function ($q) use ($searchKeyword, $columns) {
-                    foreach ($columns as $column) {
-                        $q->orWhere($column, 'LIKE', '%' . $searchKeyword . '%');
-                    }
+                $query->where(function ($q) use ($searchKeyword) {
+                    $q->orWhere('time_of_day', 'LIKE', '%' . $searchKeyword . '%')
+                      ->orWhere('symptoms', 'LIKE', '%' . $searchKeyword . '%');
+
+                    $q->orWhereHas('pet', function ($petQuery) use ($searchKeyword) {
+                        $petQuery->where('name', 'LIKE', '%' . $searchKeyword . '%');
+                    });
+
+                    $q->orWhereHas('doctor', function ($docQuery) use ($searchKeyword) {
+                        $docQuery->where('name', 'LIKE', '%' . $searchKeyword . '%'); // Assumes User model has 'name'
+                    });
+
+                    $q->orWhereHas('status', function ($statusQuery) use ($searchKeyword) {
+                        $statusQuery->where('name', 'LIKE', '%' . $searchKeyword . '%'); // Assumes AppointmentStatus model has 'name'
+                    });
                 });
             }
 

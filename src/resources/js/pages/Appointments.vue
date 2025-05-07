@@ -49,6 +49,7 @@
                 <el-table-column prop="pet.animal_type.name" label="Pet Type" width="180"></el-table-column>
                 <el-table-column prop="doctor.name" label="Doctor" width="180"></el-table-column>
                 <el-table-column prop="status.name" label="Status" width="180"></el-table-column>
+                <el-table-column prop="symptoms" label="Symptoms" width="180"></el-table-column>
                 <el-table-column label="Actions" width="180">
                     <template #default="scope">
                         <el-button @click="openModal(scope.row)">Edit</el-button>
@@ -69,6 +70,8 @@
                 :isVisible="isModalVisible"
                 :appointmentForm="appointmentForm"
                 :animalTypes="animalTypes"
+                :pets="pets"
+                :doctors="doctors"
                 :disabledDates="disabledDates"
                 @update:isVisible="isModalVisible = $event"
                 @refreshAppointments="loadAppointments"
@@ -82,7 +85,9 @@ import { ref, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import * as animalTypeService from '@/service/api/animal-types';
+import * as doctorService from '@/service/api/doctors';
 import * as appointmentService from '@/service/api/appointments';
+import * as petService from '@/service/api/pets';
 import { ElNotification } from 'element-plus';
 import CreateUpdateAppointment from '@/components/CreateUpdateAppointment.vue';
 
@@ -104,6 +109,8 @@ const disabledDates = (date: Date) => {
 const loading = ref(false);
 const animalTypes = ref([]);
 const appointments = ref([]);
+const doctors = ref([]);
+const pets = ref([]);
 const selectedAnimalType = ref(null);
 const selectedDate = ref(null); // Changed from date range to single date
 const searchQuery = ref();
@@ -157,6 +164,22 @@ const loadAppointments = async () => {
     loading.value = false;
 };
 
+const loadPets = async () => {
+    loading.value = true;
+    try {
+        const result = await petService.get({
+            pageIndex: 0,
+            pageSize: 9999,
+            sortBy: 'name',
+            sortDesc: 1,
+        });
+        pets.value = result?.data.data || [];
+    } catch (error) {
+        pets.value = [];
+    }
+    loading.value = false;
+};
+
 const handlePageChange = (newPage) => {
     serverOptions.value.page = newPage;
     loadAppointments();
@@ -165,6 +188,8 @@ const handlePageChange = (newPage) => {
 onMounted(() => {
     loadAnimalTypes();
     loadAppointments();
+    loadDoctors();
+    loadPets();
 });
 
 const loadAnimalTypes = async () => {
@@ -175,6 +200,21 @@ const loadAnimalTypes = async () => {
             animalTypes.value = result.data.data ?? [];
         } else if (result?.errors) {
             console.log('Failed to load animal types, error: ', result);
+        }
+    } catch (error) {
+        console.log('Error loading animal types:', error);
+    }
+    loading.value = false;
+};
+
+const loadDoctors = async () => {
+    loading.value = true;
+    try {
+        const result = await doctorService.get();
+        if (result?.data) {
+            doctors.value = result.data.data ?? [];
+        } else if (result?.errors) {
+            console.log('Failed to load doctros, error: ', result);
         }
     } catch (error) {
         console.log('Error loading animal types:', error);

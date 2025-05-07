@@ -36,6 +36,15 @@ class UserFactory extends AbstractFactory
     }
 
     /**
+     * @param UserType $userType
+     * @return mixed
+     */
+    public function getByType(UserType $userType): mixed
+    {
+        return User::query()->where('user_type_id', $userType->getId())->get();
+    }
+
+    /**
      * @param string $email
      * @return ?User
      */

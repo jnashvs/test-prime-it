@@ -79,8 +79,8 @@ class AppointmentController extends Controller
             $user,
             $appointmentStatus,
             $request->input('date'),
+            $request->input('symptoms'),
             $request->input('time_of_day'),
-            $request->input('symptoms')
         );
 
         return $this->apiResponse(new AppointmentResource($appointment));
@@ -107,8 +107,8 @@ class AppointmentController extends Controller
             $user,
             $appointmentStatus,
             $request->input('date'),
-            $request->input('time_of_day'),
-            $request->input('symptoms')
+            $request->input('symptoms'),
+            $request->input('time_of_day')
         );
 
         return $this->apiResponse(new AppointmentResource($appointment));

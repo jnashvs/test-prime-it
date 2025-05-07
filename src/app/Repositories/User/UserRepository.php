@@ -37,11 +37,6 @@ class UserRepository implements UserRepositoryInterface
         return $this->userFactory->getByEmail($email);
     }
 
-    public function exists(string $email): bool
-    {
-        return User::where('email', $email)->exists();
-    }
-
     public function get(?GetUserPagedRequest $request = null): mixed
     {
         if (!$request) {
@@ -127,5 +122,14 @@ class UserRepository implements UserRepositoryInterface
         }
 
         return $this->userFactory->getById($user->getId());
+    }
+
+    /**
+     * @param UserType $userType
+     * @return bool
+     */
+    public function getByType(UserType $userType): mixed
+    {
+        return $this->userFactory->getByType($userType);
     }
 }
