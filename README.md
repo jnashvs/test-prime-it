@@ -1,4 +1,4 @@
-# Pet Management API - "O Patusco" Veterinary Clinic
+# Pet Management App - "O Patusco" Veterinary Clinic
 
 This project is a solution for the appointment and management challenge at the "O Patusco" veterinary clinic. The goal is to optimize doctor scheduling and improve client experience by enabling online appointment booking and efficient management.
 
