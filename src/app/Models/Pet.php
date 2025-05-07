@@ -111,4 +111,14 @@ class Pet extends Model
     {
         $this->owner_id = $user?->getId();
     }
-}
+
+    public function getCreatedAt(): ?string
+    {
+        return $this->created_at?->toDateTimeString();
+    }
+
+    public function getUpdatedAt(): ?string
+    {
+        return $this->updated_at?->toDateTimeString();
+    }
+    }

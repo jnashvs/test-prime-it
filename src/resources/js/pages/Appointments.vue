@@ -49,6 +49,7 @@
             </el-row>
 
             <el-table :data="appointments" style="width: 100%">
+                <el-table-column prop="updated_at" label="Last Update" width="180"></el-table-column>
                 <el-table-column prop="date" label="Date" width="180"></el-table-column>
                 <el-table-column prop="time_of_day" label="Time of Day" width="180"></el-table-column>
                 <el-table-column prop="pet.name" label="Pet" width="180"></el-table-column>
@@ -150,7 +151,7 @@ const appointmentForm = ref({
 const serverOptions = ref({
     page: 1,
     rowsPerPage: 20,
-    sortBy: 'id',
+    sortBy: 'updated_at',
     sortType: 'desc',
 });
 
@@ -273,13 +274,24 @@ const deleteAppointment = async (id: number) => {
     if (!id) return;
     loading.value = true;
     try {
-        await appointmentService.remove(id);
-        ElNotification({
-            title: 'Success',
-            message: 'Appointment deleted successfully!',
-            type: 'success',
-        });
-        await loadAppointments();
+        const response = await appointmentService.remove(id);
+        const hasValidationErrors = response.errors && Object.keys(response.errors).length > 0;
+        const isErrorStatus = response.status >= 400;
+
+        if (hasValidationErrors || isErrorStatus) {
+            ElNotification({
+                title: 'Error',
+                message: response.message ?? 'Failed to delete pet.',
+                type: 'error',
+            });
+        } else {
+            ElNotification({
+                title: 'Success',
+                message: 'Appointment deleted successfully!',
+                type: 'success',
+            });
+            await loadAppointments();
+        }
     } catch (error) {
         ElNotification({
             title: 'Error',
@@ -287,7 +299,8 @@ const deleteAppointment = async (id: number) => {
             type: 'error',
         });
         console.log('Failed to delete appointment:', error);
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 };
 </script>

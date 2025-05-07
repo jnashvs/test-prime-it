@@ -71,31 +71,44 @@ const closeDialog = () => {
 const savePet = async () => {
     loading.value = true;
     try {
+        let response;
+        let successMessage;
+
         if (props.petForm.id) {
-            await petService.update(props.petForm.id, props.petForm);
+            response = await petService.update(props.petForm.id, props.petForm);
+            successMessage = 'Pet updated successfully!';
+        } else {
+            response = await petService.create(props.petForm);
+            successMessage = 'Pet created successfully!';
+        }
+
+        const hasValidationErrors = response.errors && Object.keys(response.errors).length > 0;
+        const isErrorStatus = response.status >= 400;
+
+        if (hasValidationErrors || isErrorStatus) {
             ElNotification({
-                title: 'Success',
-                message: 'Pet updated successfully!',
-                type: 'success',
+                title: 'Error',
+                message: response.message || 'Failed to save pet.',
+                type: 'error',
             });
         } else {
-            await petService.create(props.petForm);
             ElNotification({
                 title: 'Success',
-                message: 'Pet created successfully!',
+                message: successMessage,
                 type: 'success',
             });
+            emit('refreshPets');
+            closeDialog();
         }
-        emit('refreshPets');
-        closeDialog();
     } catch (error) {
-        ElNotification({
+       ElNotification({
             title: 'Error',
-            message: 'Failed to save pet.',
+            message: 'An unexpected network or client-side error occurred.',
             type: 'error',
         });
-        console.log('Failed to save pet:', error);
+        console.log('Failed to save pet (catch block):', error);
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 };
 </script>

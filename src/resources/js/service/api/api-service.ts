@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from '@/http-axios';
+import { isAxiosError } from 'axios';
 
 interface ApiResponse<T> {
     data: T;
@@ -12,8 +13,8 @@ const handleResponse = async <T>(request: Promise<AxiosResponse<T>>): Promise<Ap
         const response = await request;
         return { data: response.data, status: response.status };
     } catch (error: any) {
-        if (axios.isAxiosError(error)) {
-            if (error.response?.status === 401 || error.response?.status === 422) {
+        if (isAxiosError(error)) {
+            if (error.response?.status === 401 || error.response?.status === 422 || error.response?.status === 403) {
                 return {
                     data: {} as T,
                     errors: error.response.data.errors || {},

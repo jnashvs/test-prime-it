@@ -119,34 +119,47 @@ const saveAppointment = async () => {
     const payload = { ...props.appointmentForm };
 
     try {
+        let response;
+        let successMessage;
+
         if (payload.id) {
-            await appointmentService.update(payload.id, payload);
-            ElNotification({
-                title: 'Success',
-                message: 'Appointment updated successfully!',
-                type: 'success',
-            });
+            response = await appointmentService.update(payload.id, payload);
+            successMessage = 'Appointment updated successfully!';
         } else {
-            await appointmentService.create({
+            response = await appointmentService.create({
                 ...payload,
                 status_id: payload.status_id ?? 1,
             });
+            successMessage = 'Appointment created successfully!';
+        }
+
+        const hasValidationErrors = response.errors && Object.keys(response.errors).length > 0;
+        const isErrorStatus = response.status >= 400;
+
+        if (hasValidationErrors || isErrorStatus) {
+            ElNotification({
+                title: 'Error',
+                message: response.message || 'Failed to save appointment.',
+                type: 'error',
+            });
+        } else {
             ElNotification({
                 title: 'Success',
-                message: 'Appointment created successfully!',
+                message: successMessage,
                 type: 'success',
             });
+            emit('refreshAppointments');
+            closeDialog();
         }
-        emit('refreshAppointments');
-        closeDialog();
     } catch (error) {
         ElNotification({
             title: 'Error',
-            message: 'Failed to save appointment.',
+            message: 'An unexpected network or client-side error occurred.',
             type: 'error',
         });
-        console.log('Failed to save appointment:', error);
+        console.log('Failed to save appointment (catch block):', error);
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 };
 </script>

@@ -5,9 +5,6 @@
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <el-row :gutter="20">
                 <el-col :span="4">
-                    <el-button type="primary" :disabled="loading" @click="openModal()">Add Pet</el-button>
-                </el-col>
-                <el-col :span="4">
                     <el-select v-model="selectedAnimalType" @change="loadPets" :disabled="loading" placeholder="Select Animal Type">
                         <el-option value="">All</el-option>
                         <el-option
@@ -30,9 +27,8 @@
                 </el-col>
             </el-row>
 
-            <!-- New row for search input -->
             <el-row :gutter="20">
-                <el-col :span="12">
+                <el-col :span="11">
                     <el-input
                         v-model="searchQuery"
                         @input="loadPets"
@@ -43,7 +39,14 @@
                 </el-col>
             </el-row>
 
+            <el-row :gutter="20">
+                <el-col :span="12">
+                    <el-button type="primary" :disabled="loading" @click="openModal()">Add Pet</el-button>
+                </el-col>
+            </el-row>
+
             <el-table :data="pets" style="width: 100%">
+                <el-table-column prop="updated_at" label="Last Update" width="180"></el-table-column>
                 <el-table-column prop="name" label="Name" width="180"></el-table-column>
                 <el-table-column prop="registration_number" label="Registration Number" width="180"></el-table-column>
                 <el-table-column prop="animal_type.name" label="Animal Type" width="180"></el-table-column>
@@ -121,7 +124,7 @@ const petForm = ref({
 const serverOptions = ref({
     page: 1,
     rowsPerPage: 20,
-    sortBy: 'id',
+    sortBy: 'updated_at',
     sortType: 'desc',
 });
 
@@ -211,13 +214,26 @@ const deletePet = async (id: number) => {
     if (!id) return;
     loading.value = true;
     try {
-        await petService.remove(id);
-        ElNotification({
-            title: 'Success',
-            message: 'Pet deleted successfully!',
-            type: 'success',
-        });
-        await loadPets();
+        const response = await petService.remove(id);
+        const hasValidationErrors = response.errors && Object.keys(response.errors).length > 0;
+        const isErrorStatus = response.status >= 400;
+
+        if (hasValidationErrors || isErrorStatus) {
+            ElNotification({
+                title: 'Error',
+                message: response.message ?? 'Failed to delete pet.',
+                type: 'error',
+            });
+        } else {
+            ElNotification({
+                title: 'Success',
+                message: 'Pet deleted successfully!',
+                type: 'success',
+            });
+
+            await loadPets();
+        }
+
     } catch (error) {
         ElNotification({
             title: 'Error',
@@ -225,7 +241,8 @@ const deletePet = async (id: number) => {
             type: 'error',
         });
         console.log('Failed to delete pet:', error);
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 };
 </script>

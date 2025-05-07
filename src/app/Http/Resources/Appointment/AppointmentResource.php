@@ -33,6 +33,8 @@ class AppointmentResource extends BaseResource
             'status_id' => $item->getStatusId(),
             'status' => new AppointmentStatusResource($item->status),
             'symptoms' => $item->getSymptoms(),
+            'created_at' => $item->getCreatedAt(),
+            'updated_at' => $item->getUpdatedAt(),
         ];
     }
 }

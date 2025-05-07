@@ -23,4 +23,19 @@ class EditPetRequest extends BaseRequest
             'date_of_birth' => 'required|date|before_or_equal:today',
         ];
     }
+
+    /**
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'pet name',
+            'registration_number' => 'registration number',
+            'animal_type_id' => 'animal type',
+            'breed' => 'breed',
+            'date_of_birth' => 'date of birth',
+        ];
+    }
 }

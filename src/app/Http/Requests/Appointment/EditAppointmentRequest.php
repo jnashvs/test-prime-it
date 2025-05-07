@@ -19,4 +19,20 @@ class EditAppointmentRequest extends BaseRequest
             'symptoms' => 'nullable|string',
         ];
     }
+
+    /**
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'pet_id' => 'pet',
+            'doctor_id' => 'doctor',
+            'date' => 'appointment date',
+            'time_of_day' => 'time of day',
+            'status_id' => 'status',
+            'symptoms' => 'symptoms',
+        ];
+    }
 }

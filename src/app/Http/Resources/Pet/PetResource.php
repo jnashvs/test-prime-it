@@ -30,7 +30,9 @@ class PetResource extends BaseResource
             'date_of_birth' => $item->getDateOfBirth(),
             'age' => $item->getAge(),
             'owner_id' => $item->getOwnerId(),
-            'owner' => new UserResource($item->owner)
+            'owner' => new UserResource($item->owner),
+            'created_at' => $item->getCreatedAt(),
+            'updated_at' => $item->getUpdatedAt(),
         ];
     }
 }
