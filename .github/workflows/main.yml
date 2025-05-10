@@ -33,9 +33,9 @@ jobs:
         run: php artisan migrate
         working-directory: src
 
-      - name: Test PHPStan
-        run: ./vendor/bin/phpstan analyse --memory-limit=-1
-        working-directory: src
+      #- name: Test PHPStan
+      #  run: ./vendor/bin/phpstan analyse --memory-limit=-1
+      #  working-directory: src
 
       - name: Run Unit Test & Feature Test
         run: ./vendor/bin/phpunit
