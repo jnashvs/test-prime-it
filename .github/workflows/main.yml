@@ -22,7 +22,7 @@ jobs:
         working-directory: src
 
       - name: Copy .env
-        run: cp .env.example .env
+        run: cp .env.test .env
         working-directory: src
 
       - name: Install app
