@@ -18,8 +18,8 @@ jobs:
 
       #- name: Create database
       #  run: touch ./database/database.sqlite
-      - name: list files
-        run: ls -la
+      - name: access src and list files
+        run: cd src && ls -la
 
       - name: Copy .env
         run: cp .env.example .env
