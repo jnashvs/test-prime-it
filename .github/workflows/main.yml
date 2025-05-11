@@ -48,5 +48,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd ${{ secrets.APP_PATH }}/src
-            ./build.sh
+            cd ${{ secrets.APP_PATH }}
+            pwd
+            ls -la
+            ls -la src
+            ./src/build.sh
