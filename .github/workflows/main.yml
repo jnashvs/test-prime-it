@@ -52,4 +52,4 @@ jobs:
             pwd
             ls -la
             ls -la src
-            ./src/build.sh
+            ./build.sh
