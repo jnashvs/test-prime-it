@@ -49,6 +49,8 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ${{ secrets.APP_PATH }}
+            chmod +x build.sh
             pwd
             ls -la
+            ls -la | grep build.sh  # Check if build.sh is listed
             ./build.sh
