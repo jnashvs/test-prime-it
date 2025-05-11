@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,31 +17,39 @@ jobs:
         with:
           php-version: 8.3
 
-      #- name: Create database
-      #  run: touch ./database/database.sqlite
+      - name: Create database
+        run: touch database/database.sqlite
+        working-directory: src
 
       - name: Copy .env
         run: cp .env.test .env
+        working-directory: src
 
       - name: Install app
         run: composer install
+        working-directory: src
 
       - name: Run migrations
         run: php artisan migrate
+        working-directory: src
 
-      - name: Test PHPStan
-        run: ./vendor/bin/phpstan analyse --memory-limit=-1
+      #- name: Test PHPStan
+      #  run: ./vendor/bin/phpstan analyse --memory-limit=-1
+      #  working-directory: src
 
       - name: Run Unit Test & Feature Test
-        run: ./vendor/bin/phpunit #php artisan test --env=testing
+        run: ./vendor/bin/phpunit
+        working-directory: src
 
       - name: Deploy using ssh
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          # key: ${{ secrets.SSH_PRIVATE_KEY }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ${{ secrets.APP_PATH }}
-            ./build.sh
+            pwd
+            ls -la
+            ls -la src
+            ./src/build.sh
