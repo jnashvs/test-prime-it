@@ -51,5 +51,4 @@ jobs:
             cd ${{ secrets.APP_PATH }}
             pwd
             ls -la
-            ls -la src
             ./build.sh
