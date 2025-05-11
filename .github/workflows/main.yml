@@ -48,8 +48,30 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd ${{ secrets.APP_PATH }}
-            pwd
-            ls -la
-            ls -la src
-            ./src/build.sh
+                  cd ${{ secrets.APP_PATH }}
+                  echo "#!/bin/bash" > build.sh
+                  echo "" >> build.sh
+                  echo "echo \"Running deploy script\"" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"[1/5] Pulling from GitHub\"" >> build.sh
+                  echo "git pull origin" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"[2/5] Creating database if one isn't found\"" >> build.sh
+                  echo "touch database/database.sqlite" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"[3/5] Installing packages using composer\"" >> build.sh
+                  echo "composer install" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"[4/5] Publishing API Platform assets\"" >> build.sh
+                  echo "php artisan api-platform:install" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"[5/5] Migrating database\"" >> build.sh
+                  echo "php artisan migrate --force" >> build.sh
+                  echo "" >> build.sh
+                  echo "echo \"The app has been built and deployed!\"" >> build.sh
+                  
+                  # Make the script executable
+                  chmod +x build.sh
+            
+                  # Run the script
+                  ./build.sh
