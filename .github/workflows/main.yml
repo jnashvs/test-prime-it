@@ -37,6 +37,12 @@ jobs:
         run: npm run build
         working-directory: src
 
+      - name: Archive production assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-build
+          path: src/public/build
+
       - name: Run migrations
         run: php artisan migrate
         working-directory: src
@@ -79,13 +85,19 @@ jobs:
             echo "echo \"[4/6] Installing packages using composer\"" >> build.sh
             echo "composer install" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[5/6] Running migrations\"" >> build.sh
+            echo "echo \"[5/6] Installing Node.js dependencies\"" >> build.sh
+            echo "/home/1459984.cloudwaysapps.com/ndmwwcjgdr/public_html/npm ci" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[6/6] Building Vite assets\"" >> build.sh
+            echo "/home/1459984.cloudwaysapps.com/ndmwwcjgdr/public_html/npm run build" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[7/7] Running migrations\"" >> build.sh
             echo "php artisan migrate --force" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[6/6] Generating application key\"" >> build.sh
+            echo "echo \"[8/8] Generating application key\"" >> build.sh
             echo "php artisan key:generate" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[7/7] Running seeders\"" >> build.sh
+            echo "echo \"[9/9] Running seeders\"" >> build.sh
             echo "php artisan db:seed --force" >> build.sh
             echo "" >> build.sh
             echo "echo \"The app has been built and deployed!\"" >> build.sh
