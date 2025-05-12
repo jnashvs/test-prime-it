@@ -86,7 +86,7 @@ jobs:
             echo "composer install" >> build.sh
             echo "" >> build.sh
             echo "echo \"[5/6] Installing Node.js dependencies and building Vite assets\"" >> build.sh
-            echo "cd ../public_html/src" >> build.sh
+            echo "ls -la" >> build.sh
             echo "npm ci" >> build.sh
             echo "npm run build" >> build.sh
             echo "cd - > /dev/null" >> build.sh
