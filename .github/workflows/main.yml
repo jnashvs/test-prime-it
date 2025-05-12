@@ -53,6 +53,7 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ${{ secrets.APP_PATH }}
+            cd src
             echo "#!/bin/bash" > build.sh
             echo "" >> build.sh
             echo "echo \"Running deploy script\"" >> build.sh
@@ -74,6 +75,6 @@ jobs:
             echo "php artisan migrate --force" >> build.sh
             echo "" >> build.sh
             echo "echo \"The app has been built and deployed!\"" >> build.sh
-            
+
             chmod +x build.sh
             ./build.sh
