@@ -58,23 +58,26 @@ jobs:
             echo "" >> build.sh
             echo "echo \"Running deploy script\"" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[1/5] Pulling from GitHub\"" >> build.sh
+            echo "echo \"[1/6] Pulling from GitHub\"" >> build.sh
             echo "git pull origin main" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[2/5] Creating database if one isn't found\"" >> build.sh
+            echo "echo \"[2/6] Creating database if one isn't found\"" >> build.sh
             echo "mkdir -p database" >> build.sh
             echo "touch database/database.sqlite" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[3/5] Installing packages using composer\"" >> build.sh
+            echo "echo \"[3/6] Copying .env file\"" >> build.sh
+            echo "cp .env.test .env" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[4/6] Installing packages using composer\"" >> build.sh
             echo "composer install" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[4/5] Running migrations\"" >> build.sh
+            echo "echo \"[5/6] Running migrations\"" >> build.sh
             echo "php artisan migrate --force" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[5/5] Generating application key\"" >> build.sh
+            echo "echo \"[6/6] Generating application key\"" >> build.sh
             echo "php artisan key:generate" >> build.sh
             echo "" >> build.sh
-            echo "echo \"[6/6] Running seeders\"" >> build.sh
+            echo "echo \"[7/7] Running seeders\"" >> build.sh
             echo "php artisan db:seed --force" >> build.sh
             echo "" >> build.sh
             echo "echo \"The app has been built and deployed!\"" >> build.sh
