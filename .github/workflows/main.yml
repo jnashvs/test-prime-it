@@ -2,8 +2,7 @@ name: Build, test and deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
@@ -38,11 +37,15 @@ jobs:
         run: php artisan db:seed
         working-directory: src
 
+      #- name: Test PHPStan
+      #  run: ./vendor/bin/phpstan analyse --memory-limit=-1
+      #  working-directory: src
+
       - name: Run Unit Test & Feature Test
         run: ./vendor/bin/phpunit
         working-directory: src
 
-      - name: Deploy using SSH
+      - name: Deploy using ssh
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -50,36 +53,29 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ${{ secrets.APP_PATH }}
-
-            rm -f build.sh
-
-            cat > build.sh << 'EOF'
-#!/bin/bash
-
-  set -e
-  
-  echo "🚀 Running deploy script"
-  
-  echo "[1/5] Pulling from GitHub"
-  git fetch origin
-  git reset --hard origin/main
-  
-  echo "[2/5] Creating database if one isn't found"
-  mkdir -p database
-  touch database/database.sqlite
-  
-  echo "[3/5] Installing packages using composer"
-  composer install --no-interaction --prefer-dist --optimize-autoloader
-  
-  echo "[4/5] Generating app key"
-  php artisan key:generate
-  
-  echo "[5/5] Migrating and seeding database"
-  php artisan migrate --force
-  php artisan db:seed --force
-  
-  echo "✅ The app has been built and deployed!"
-  EOF
-  
-  chmod +x build.sh
-  ./build.sh
+            echo "#!/bin/bash" > build.sh
+            echo "" >> build.sh
+            echo "echo \"Running deploy script\"" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[1/5] Pulling from GitHub\"" >> build.sh
+            echo "git pull origin" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[2/5] Creating database if one isn't found\"" >> build.sh
+            echo "touch database/database.sqlite" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[3/5] Installing packages using composer\"" >> build.sh
+            echo "composer install" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[4/5] Publishing API Platform assets\"" >> build.sh
+            echo "php artisan api-platform:install" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[5/5] Migrating database\"" >> build.sh
+            echo "php artisan migrate --force" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"The app has been built and deployed!\"" >> build.sh
+            
+            # Make the script executable
+            chmod +x build.sh
+            
+            # Run the script
+            ./build.sh
