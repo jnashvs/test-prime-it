@@ -58,9 +58,10 @@ jobs:
             echo "echo \"Running deploy script\"" >> build.sh
             echo "" >> build.sh
             echo "echo \"[1/5] Pulling from GitHub\"" >> build.sh
-            echo "git pull origin" >> build.sh
+            echo "git pull origin main" >> build.sh
             echo "" >> build.sh
             echo "echo \"[2/5] Creating database if one isn't found\"" >> build.sh
+            echo "mkdir -p database" >> build.sh
             echo "touch database/database.sqlite" >> build.sh
             echo "" >> build.sh
             echo "echo \"[3/5] Installing packages using composer\"" >> build.sh
@@ -74,8 +75,5 @@ jobs:
             echo "" >> build.sh
             echo "echo \"The app has been built and deployed!\"" >> build.sh
             
-            # Make the script executable
             chmod +x build.sh
-            
-            # Run the script
             ./build.sh
