@@ -29,6 +29,14 @@ jobs:
         run: composer install
         working-directory: src
 
+      - name: Install Node.js dependencies
+        run: npm ci
+        working-directory: src
+
+      - name: Build Vite assets
+        run: npm run build
+        working-directory: src
+
       - name: Run migrations
         run: php artisan migrate
         working-directory: src
