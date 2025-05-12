@@ -17,7 +17,7 @@ return [
 
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
-        'localhost,localhost:5175,localhost:8082,127.0.0.1,127.0.0.1:8000,::1',
+        'phplaravel-1459984-5497468.cloudwaysapps.com,phplaravel-1459984-5497468,localhost,localhost:5175,localhost:8082,127.0.0.1,127.0.0.1:8000,::1',
         Sanctum::currentApplicationUrlWithPort(),
     ))),
 
