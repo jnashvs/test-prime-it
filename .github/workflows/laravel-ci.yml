@@ -1,7 +1,6 @@
 # File: .github/workflows/deploy.yml
 name: Deploy to Production
 
-# This workflow triggers automatically on any push to the 'main' branch.
 on:
   push:
     branches:
@@ -9,17 +8,23 @@ on:
 
 jobs:
   deploy:
-    # The job will run on a standard GitHub-hosted runner.
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Check out the repository's code. 
-      # This is needed so the workflow can read this deploy.yml file.
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Connect to your server and run the deployment script.
-      # This is the main step that does all the work on your server.
+      # ⭐️ NEW DEBUGGING STEP ⭐️
+      # This step will help us see if the secret is being passed to the action.
+      - name: Check if SSH_PRIVATE_KEY is set
+        run: |
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "❌ SSH_PRIVATE_KEY is NOT set. Please check your repository secrets."
+            exit 1
+          else
+            echo "✅ SSH_PRIVATE_KEY is set. The key is being passed to the next step."
+          fi
+
+      # The main deployment step remains the same.
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -27,43 +32,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate to the root directory of your project on the server.
-            # !!! IMPORTANT !!! 
-            # YOU MUST CHANGE THIS PATH to match your server's setup.
             cd ~/test-prime-it
-            
-            # Pull the latest changes from your 'main' branch on GitHub.
-            # This brings your new code onto the server.
             echo "Pulling latest code from GitHub..."
             git pull origin main
-            
-            # Build the docker images directly on the server using your docker-compose file.
-            # --no-cache ensures all layers are rebuilt with the latest code.
             echo "Building Docker images on the server..."
             docker-compose build --no-cache
-            
-            # Stop the current running containers and start the new ones in detached mode.
-            # --remove-orphans cleans up any old service containers.
             echo "Restarting application with new images..."
             docker-compose up -d --remove-orphans
-            
-            # === Post-Deployment Commands ===
-            # Run these commands inside the newly started 'laravel-prim-it' container.
-            
             echo "Running post-deployment commands..."
-            # Install/update composer dependencies for production.
             docker-compose exec -T laravel-prim-it composer install --no-interaction --no-dev --prefer-dist
-            
-            # Run database migrations. '--force' is required for production.
             docker-compose exec -T laravel-prim-it php artisan migrate --force
-            
-            # Optimize Laravel for production.
             docker-compose exec -T laravel-prim-it php artisan config:cache
             docker-compose exec -T laravel-prim-it php artisan route:cache
             docker-compose exec -T laravel-prim-it php artisan view:cache
-            
-            # Clean up old, unused Docker images on the server to save disk space.
             echo "Cleaning up old Docker images..."
             docker image prune -af
-            
             echo "Deployment successful!"
