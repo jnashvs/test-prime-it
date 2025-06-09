@@ -1,50 +1,105 @@
-# File: .github/workflows/deploy.yml
-name: Deploy to Production
+name: Build, test and deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ⭐️ NEW DEBUGGING STEP ⭐️
-      # This step will help us see if the secret is being passed to the action.
-      - name: Check if SSH_PRIVATE_KEY is set
-        run: |
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ SSH_PRIVATE_KEY is NOT set. Please check your repository secrets."
-            exit 1
-          else
-            echo "✅ SSH_PRIVATE_KEY is set. The key is being passed to the next step."
-          fi
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
 
-      # The main deployment step remains the same.
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Create database
+        run: touch database/database.sqlite
+        working-directory: src
+
+      - name: Copy .env
+        run: cp .env.example .env
+        working-directory: src
+
+      - name: Install app
+        run: composer install
+        working-directory: src
+
+      - name: Install Node.js dependencies
+        run: npm ci
+        working-directory: src
+
+      - name: Build Vite assets
+        run: npm run build
+        working-directory: src
+
+      - name: Archive production assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-build
+          path: src/public/build
+
+      - name: Run migrations
+        run: php artisan migrate
+        working-directory: src
+
+      - name: Run seeders
+        run: php artisan db:seed
+        working-directory: src
+
+      #- name: Test PHPStan
+      #  run: ./vendor/bin/phpstan analyse --memory-limit=-1
+      #  working-directory: src
+
+      - name: Run Unit Test & Feature Test
+        run: ./vendor/bin/phpunit
+        working-directory: src
+
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd ~/test-prime-it
-            echo "Pulling latest code from GitHub..."
-            git pull origin main
-            echo "Building Docker images on the server..."
-            docker-compose build --no-cache
-            echo "Restarting application with new images..."
-            docker-compose up -d --remove-orphans
-            echo "Running post-deployment commands..."
-            docker-compose exec -T laravel-prim-it composer install --no-interaction --no-dev --prefer-dist
-            docker-compose exec -T laravel-prim-it php artisan migrate --force
-            docker-compose exec -T laravel-prim-it php artisan config:cache
-            docker-compose exec -T laravel-prim-it php artisan route:cache
-            docker-compose exec -T laravel-prim-it php artisan view:cache
-            echo "Cleaning up old Docker images..."
-            docker image prune -af
-            echo "Deployment successful!"
+            ls -la
+            cd src
+            echo "#!/bin/bash" > build.sh
+            echo "" >> build.sh
+            echo "echo \"Running deploy script\"" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[1/6] Pulling from GitHub\"" >> build.sh
+            echo "git pull origin main" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[2/6] Creating database if one isn't found\"" >> build.sh
+            echo "mkdir -p database" >> build.sh
+            echo "touch database/database.sqlite" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[3/6] Copying .env file\"" >> build.sh
+            echo "cp .env.example .env" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[4/6] Installing packages using composer\"" >> build.sh
+            echo "composer install" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[5/6] Installing Node.js dependencies and building Vite assets\"" >> build.sh
+            echo "ls -la" >> build.sh
+            echo "npm ci" >> build.sh
+            echo "npm run build" >> build.sh
+            echo "cd - > /dev/null" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[6/6] Running migrations\"" >> build.sh
+            echo "php artisan migrate --force" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[7/7] Generating application key\"" >> build.sh
+            echo "php artisan key:generate" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"[8/8] Running seeders\"" >> build.sh
+            echo "php artisan db:seed --force" >> build.sh
+            echo "" >> build.sh
+            echo "echo \"The app has been built and deployed!\"" >> build.sh
+            chmod +x build.sh
+            ./build.sh
