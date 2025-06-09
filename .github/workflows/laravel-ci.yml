@@ -5,13 +5,16 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ==================================
+      # Your Build & Test Steps (No Changes)
+      # ==================================
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -37,12 +40,6 @@ jobs:
         run: npm run build
         working-directory: src
 
-      - name: Archive production assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: vite-build
-          path: src/public/build
-
       - name: Run migrations
         run: php artisan migrate
         working-directory: src
@@ -51,56 +48,58 @@ jobs:
         run: php artisan db:seed
         working-directory: src
 
-      #- name: Test PHPStan
-      #  run: ./vendor/bin/phpstan analyse --memory-limit=-1
-      #  working-directory: src
-
       - name: Run Unit Test & Feature Test
         run: ./vendor/bin/phpunit
         working-directory: src
 
-      - name: Deploy using ssh
+      # ==================================
+      # Debugging & Deployment Steps
+      # ==================================
+
+      # ⭐️ 1. NEW DEBUGGING STEP
+      - name: Verify Secrets are Passed
+        run: |
+          echo "Username being used: ${{ secrets.SSH_USERNAME }}"
+          if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then
+            echo "❌ SSH_PASSWORD secret is NOT set."
+            exit 1
+          else
+            echo "✅ SSH_PASSWORD secret is set and will be used."
+          fi
+
+      # 🛠️ 2. SIMPLIFIED & FIXED DEPLOYMENT STEP
+      - name: Deploy to Server
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          #key: ${{ secrets.SSH_PASSWORD }}
           script: |
-            ls -la
-            cd src
-            echo "#!/bin/bash" > build.sh
-            echo "" >> build.sh
-            echo "echo \"Running deploy script\"" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[1/6] Pulling from GitHub\"" >> build.sh
-            echo "git pull origin main" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[2/6] Creating database if one isn't found\"" >> build.sh
-            echo "mkdir -p database" >> build.sh
-            echo "touch database/database.sqlite" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[3/6] Copying .env file\"" >> build.sh
-            echo "cp .env.example .env" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[4/6] Installing packages using composer\"" >> build.sh
-            echo "composer install" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[5/6] Installing Node.js dependencies and building Vite assets\"" >> build.sh
-            echo "ls -la" >> build.sh
-            echo "npm ci" >> build.sh
-            echo "npm run build" >> build.sh
-            echo "cd - > /dev/null" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[6/6] Running migrations\"" >> build.sh
-            echo "php artisan migrate --force" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[7/7] Generating application key\"" >> build.sh
-            echo "php artisan key:generate" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"[8/8] Running seeders\"" >> build.sh
-            echo "php artisan db:seed --force" >> build.sh
-            echo "" >> build.sh
-            echo "echo \"The app has been built and deployed!\"" >> build.sh
-            chmod +x build.sh
-            ./build.sh
+            # Navigate to the correct directory
+            cd ~/test-prime-it/src
+
+            # [1/5] Pulling from GitHub
+            echo "[1/5] Pulling from GitHub..."
+            git pull origin main
+
+            # [2/5] Installing packages
+            echo "[2/5] Installing packages..."
+            composer install --no-dev --optimize-autoloader
+            npm ci
+            npm run build
+
+            # [3/5] Running database migrations
+            echo "[3/5] Running database migrations..."
+            php artisan migrate --force
+
+            # [4/5] Running seeders
+            echo "[4/5] Running seeders..."
+            php artisan db:seed --force
+            
+            # [5/5] Caching for performance
+            echo "[5/5] Caching for performance..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            echo "✅ Deployment successful!"
