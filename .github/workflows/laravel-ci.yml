@@ -1,106 +1,109 @@
-name: Build, test and deploy
+name: Build, test & deploy
 
 on:
   push:
     branches: [ main ]
 
+env:
+  PHP_VERSION: "8.3"
+  NODE_VERSION: "18"
+  PROJECT_DIR: "/opt/test-prime-it/src"
+  DEFAULT_PORT: 22
+
+# ───────────────────────────────────
+# 1️⃣  BUILD & TEST  (GitHub runner)
+# ───────────────────────────────────
 jobs:
-  build-and-deploy:
+  ci:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: src
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ==================================
-      # Your Build & Test Steps (No Changes)
-      # ==================================
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.3
+      # -------- PHP / Composer --------
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: ${{ env.PHP_VERSION }}, coverage: none }
 
-      - name: Create database
-        run: touch database/database.sqlite
-        working-directory: src
-
-      - name: Copy .env
-        run: cp .env.test .env
-        working-directory: src
-
-      - name: Install app
-        run: composer install
-        working-directory: src
-
-      - name: Install Node.js dependencies
-        run: npm ci
-        working-directory: src
-
-      - name: Build Vite assets
-        run: npm run build
-        working-directory: src
-
-      - name: Run migrations
-        run: php artisan migrate
-        working-directory: src
-
-      - name: Run seeders
-        run: php artisan db:seed
-        working-directory: src
-
-      - name: Run Unit Test & Feature Test
-        run: ./vendor/bin/phpunit
-        working-directory: src
-
-      # ==================================
-      # Debugging & Deployment Steps
-      # ==================================
-
-      # ⭐️ 1. NEW DEBUGGING STEP
-      - name: Verify Secrets are Passed
+      - name: Prepare sqlite & env
         run: |
-          echo "Username being used: ${{ secrets.ROOT }}"
-          if [ -z "${{ secrets.SSH_KEY }}" ]; then
-            echo "❌ SSH_KEY secret is NOT set."
-            exit 1
-          else
-            echo "✅ SSH_KEY secret is set and will be used."
-          fi
+          cp .env.test .env
+          touch database/database.sqlite
 
-      # 🛠️ 2. SIMPLIFIED & FIXED DEPLOYMENT STEP
-      - name: Deploy to Server
+      - name: Install Composer deps
+        uses: ramsey/composer-install@v3
+
+      # -------- Node / Vite ----------
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: "src/package-lock.json"
+
+      - run: npm ci
+      - run: npm run build
+
+      # -------- Laravel tests ---------
+      - run: php artisan migrate
+      - run: php artisan db:seed
+      - run: ./vendor/bin/phpunit
+
+  # ───────────────────────────────────
+  # 2️⃣  DEPLOY (only if ci succeeds)
+  # ───────────────────────────────────
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      # Debug: verify secrets exist
+      - name: Verify SSH secrets
+        run: |
+          echo "User: ${{ secrets.USER }}"
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "❌ SSH_KEY secret missing"; exit 1
+          fi
+          echo "✅ SSH_KEY secret found"
+
+      # Actual deploy
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.ROOT }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
+          host:     ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ env.DEFAULT_PORT }}
           script: |
-            # Navigate to the correct directory
-            cd ~/test-prime-it/src
+            set -e
 
-            # [1/5] Pulling from GitHub
-            echo "[1/5] Pulling from GitHub..."
+            echo "▶️  Ensure project dir exists"
+            if [ ! -d "${PROJECT_DIR}" ]; then
+              mkdir -p "${PROJECT_DIR%/*}"          # create /opt/test-prime-it
+              git clone https://github.com/${{ github.repository }} "${PROJECT_DIR%/*}"
+              mv "${PROJECT_DIR%/*}"/* "${PROJECT_DIR%/*}/src"
+              cp .env.example .env
+            fi
+
+            cd "${PROJECT_DIR}"
+
+            # ────────────── 5-step deploy ──────────────
+            echo "[1/5] git pull"
             git pull origin main
 
-            # [2/5] Installing packages
-            echo "[2/5] Installing packages..."
+            echo "[2/5] composer / npm"
             composer install --no-dev --optimize-autoloader
             npm ci
             npm run build
 
-            # [3/5] Running database migrations
-            echo "[3/5] Running database migrations..."
+            echo "[3/5] migrations"
             php artisan migrate --force
 
-            # [4/5] Running seeders
-            echo "[4/5] Running seeders..."
+            echo "[4/5] seeders"
             php artisan db:seed --force
-            
-            # [5/5] Caching for performance
-            echo "[5/5] Caching for performance..."
+
+            echo "[5/5] cache optimise"
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            
+
             echo "✅ Deployment successful!"
