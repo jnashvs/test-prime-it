@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Verify SSH secrets
         run: |
-          echo "User: ${{ secrets.USER }}"
+          echo "User: ${{ secrets.ROOT }}"
           if [ -z "${{ secrets.SSH_KEY }}" ]; then
             echo "❌ SSH_KEY secret missing"; exit 1
           fi
@@ -78,7 +78,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host:     ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
+          username: ${{ secrets.ROOT }}
           key:      ${{ secrets.SSH_KEY }}
           port:     ${{ env.DEFAULT_PORT }}
           script: |
