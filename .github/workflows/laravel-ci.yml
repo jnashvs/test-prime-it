@@ -59,8 +59,8 @@ jobs:
       # ⭐️ 1. NEW DEBUGGING STEP
       - name: Verify Secrets are Passed
         run: |
-          echo "Username being used: ${{ secrets.SSH_USERNAME }}"
-          if [ -z "${{ secrets.SSH_PASSWORD }}" ]; then
+          echo "Username being used: ${{ secrets.ROOT }}"
+          if [ -z "${{ secrets.PASSWORD }}" ]; then
             echo "❌ SSH_PASSWORD secret is NOT set."
             exit 1
           else
