@@ -12,7 +12,7 @@ services:
     networks:
       - prime-it-laravel-network
     volumes:
-      - ./db:/bitnami/mariadb
+      - mariadb_data:/bitnami/mariadb
     environment:
       ALLOW_EMPTY_PASSWORD: "yes"
       MARIADB_USER: db_prime_it_user
