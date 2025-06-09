@@ -32,9 +32,11 @@ jobs:
         run: |
           cp .env.test .env
           touch database/database.sqlite
+        working-directory: src
 
-      - name: Install Composer deps
-        uses: ramsey/composer-install@v3
+      - name: Install composer deps
+      - run: composer install
+      - working-directory: src
 
       # Node / Vite
       - uses: actions/setup-node@v4
@@ -45,11 +47,13 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      - working-directory: src
 
       # Laravel tests
       - run: php artisan migrate
       - run: php artisan db:seed
       - run: ./vendor/bin/phpunit
+      - working-directory: src
 
   # ───────────────────────────────────
   # 2️⃣  DEPLOY  (runs if ci succeeds)
