@@ -7,7 +7,7 @@ on:
 env:
   PHP_VERSION: "8.3"
   NODE_VERSION: "18"
-  PROJECT_DIR: "/opt/test-prime-it"
+  PROJECT_DIR: "/root/test-prime-it"
   DEFAULT_PORT: 22
 
 jobs:
