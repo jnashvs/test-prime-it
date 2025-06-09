@@ -115,8 +115,8 @@ jobs:
             docker compose exec -T laravel-prim-it bash -c "npm ci && npm run build"
 
             echo "[6/6] Migrate, seed & cache (in container)"
-            docker compose exec -T laravel-prim-it php artisan migrate --force
-            docker compose exec -T laravel-prim-it php artisan db:seed --force
+            docker compose exec -T laravel-prim-it php artisan migrate
+            docker compose exec -T laravel-prim-it php artisan db:seed
             docker compose exec -T laravel-prim-it php artisan config:cache
             docker compose exec -T laravel-prim-it php artisan route:cache
             docker compose exec -T laravel-prim-it php artisan view:cache

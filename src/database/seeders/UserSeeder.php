@@ -16,7 +16,6 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        // Define the common password for all seeded users
         $password = Hash::make('password');
 
         // Create 3 receptionists for test usage
