@@ -69,7 +69,7 @@ jobs:
 
       # 🛠️ 2. SIMPLIFIED & FIXED DEPLOYMENT STEP
       - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.1.0
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
