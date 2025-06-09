@@ -109,7 +109,7 @@ jobs:
 
             echo "[4/6] Composer install (in container)"
             docker compose exec -T laravel-prim-it \
-              composer install --no-dev --optimize-autoloader
+              composer install --no-interaction --prefer-dist
 
             echo "[5/6] npm ci & build (in container)"
             docker compose exec -T laravel-prim-it bash -c "npm ci && npm run build"
