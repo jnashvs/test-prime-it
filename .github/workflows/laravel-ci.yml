@@ -92,32 +92,33 @@ jobs:
               cd "$PROJECT_DIR"
               cp .env.example .env
             fi
-            
+                        
             cd "$PROJECT_DIR"
-            
-            echo "[1/6] git pull"
+            echo "[1/6] Git pull"
             git fetch --prune
             git reset --hard origin/main
-            
-            echo "[2/6] rebuild + (re)start containers"
-            docker compose up -d --build        # builds your bitnami/laravel & vue images
-            
-            echo "[3/6] composer install (in container)"
+
+            echo "[2/6] Ensure Docker network"
+            if ! docker network inspect prime-it-laravel-network >/dev/null 2>&1; then
+              echo "🔧  Creating network prime-it-laravel-network"
+              docker network create prime-it-laravel-network
+            fi
+
+            echo "[3/6] Rebuild & (re)start containers"
+            docker compose up -d --build
+
+            echo "[4/6] Composer install (in container)"
             docker compose exec -T laravel-prim-it \
               composer install --no-dev --optimize-autoloader
-            
-            echo "[4/6] npm ci & build (in container)"
+
+            echo "[5/6] npm ci & build (in container)"
             docker compose exec -T laravel-prim-it bash -c "npm ci && npm run build"
-            
-            echo "[5/6] migrate & seed (in container)"
-            docker compose exec -T laravel-prim-it \
-              php artisan migrate --force
-            docker compose exec -T laravel-prim-it \
-              php artisan db:seed --force
-            
-            echo "[6/6] cache optimise (in container)"
+
+            echo "[6/6] Migrate, seed & cache (in container)"
+            docker compose exec -T laravel-prim-it php artisan migrate --force
+            docker compose exec -T laravel-prim-it php artisan db:seed --force
             docker compose exec -T laravel-prim-it php artisan config:cache
             docker compose exec -T laravel-prim-it php artisan route:cache
             docker compose exec -T laravel-prim-it php artisan view:cache
-            
+
             echo "✅ Deployment successful!"
