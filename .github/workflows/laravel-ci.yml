@@ -10,10 +10,10 @@ env:
   PROJECT_DIR: "/opt/test-prime-it/src"
   DEFAULT_PORT: 22
 
-# ───────────────────────────────────
-# 1️⃣  BUILD & TEST  (GitHub runner)
-# ───────────────────────────────────
 jobs:
+  # ───────────────────────────────────
+  # 1️⃣  BUILD & TEST
+  # ───────────────────────────────────
   ci:
     runs-on: ubuntu-latest
     defaults:
@@ -22,9 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # -------- PHP / Composer --------
+      # PHP & Composer
       - uses: shivammathur/setup-php@v2
-        with: { php-version: ${{ env.PHP_VERSION }}, coverage: none }
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
 
       - name: Prepare sqlite & env
         run: |
@@ -34,7 +36,7 @@ jobs:
       - name: Install Composer deps
         uses: ramsey/composer-install@v3
 
-      # -------- Node / Vite ----------
+      # Node / Vite
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -44,19 +46,18 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      # -------- Laravel tests ---------
+      # Laravel tests
       - run: php artisan migrate
       - run: php artisan db:seed
       - run: ./vendor/bin/phpunit
 
   # ───────────────────────────────────
-  # 2️⃣  DEPLOY (only if ci succeeds)
+  # 2️⃣  DEPLOY  (runs if ci succeeds)
   # ───────────────────────────────────
   deploy:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-      # Debug: verify secrets exist
       - name: Verify SSH secrets
         run: |
           echo "User: ${{ secrets.USER }}"
@@ -65,7 +66,6 @@ jobs:
           fi
           echo "✅ SSH_KEY secret found"
 
-      # Actual deploy
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -76,17 +76,18 @@ jobs:
           script: |
             set -e
 
+            PROJECT_DIR="${{ env.PROJECT_DIR }}"
+
             echo "▶️  Ensure project dir exists"
-            if [ ! -d "${PROJECT_DIR}" ]; then
-              mkdir -p "${PROJECT_DIR%/*}"          # create /opt/test-prime-it
+            if [ ! -d "$PROJECT_DIR" ]; then
+              mkdir -p "${PROJECT_DIR%/*}"
               git clone https://github.com/${{ github.repository }} "${PROJECT_DIR%/*}"
               mv "${PROJECT_DIR%/*}"/* "${PROJECT_DIR%/*}/src"
               cp .env.example .env
             fi
 
-            cd "${PROJECT_DIR}"
+            cd "$PROJECT_DIR"
 
-            # ────────────── 5-step deploy ──────────────
             echo "[1/5] git pull"
             git pull origin main
 
