@@ -69,11 +69,11 @@ jobs:
 
       # 🛠️ 2. SIMPLIFIED & FIXED DEPLOYMENT STEP
       - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.ROOT }}
+          password: ${{ secrets.PASSWORD }}
           script: |
             # Navigate to the correct directory
             cd ~/test-prime-it/src
