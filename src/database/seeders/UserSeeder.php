@@ -9,37 +9,51 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run()
     {
-        // Create 3 receptionists for tet usage
+        // Define the common password for all seeded users
+        $password = Hash::make('password');
+
+        // Create 3 receptionists for test usage
         for ($i = 1; $i <= 3; $i++) {
-            $receptionist = User::create([
-                'name' => "Receptionist $i",
-                'email' => "receptionist$i@patusco.com",
-                'password' => Hash::make('password'),
-                'user_type_id' => UserType::RECEPTIONIST,
-            ]);
+            $receptionist = User::firstOrCreate(
+                ['email' => "receptionist$i@patusco.com"],
+                [
+                    'name' => "Receptionist $i",
+                    'password' => $password,
+                    'user_type_id' => UserType::RECEPTIONIST,
+                ]
+            );
             $receptionist->assignRole('receptionist');
         }
 
         // Create 5 doctors for test usage
         for ($i = 1; $i <= 5; $i++) {
-            $doctor = User::create([
-                'name' => "Dr. Patusco $i",
-                'email' => "doctor$i@patusco.com",
-                'password' => Hash::make('password'),
-                'user_type_id' => UserType::DOCTOR,
-            ]);
+            $doctor = User::firstOrCreate(
+                ['email' => "doctor$i@patusco.com"],
+                [
+                    'name' => "Dr. Patusco $i",
+                    'password' => $password,
+                    'user_type_id' => UserType::DOCTOR,
+                ]
+            );
             $doctor->assignRole('doctor');
         }
 
-        // Create a user
-        $user = User::create([
-            'name' => 'John Doe',
-            'email' => 'user@patusco.com',
-            'password' => Hash::make('password'),
-            'user_type_id' => UserType::USER,
-        ]);
+        // Create a single user
+        $user = User::firstOrCreate(
+            ['email' => 'user@patusco.com'],
+            [
+                'name' => 'John Doe',
+                'password' => $password,
+                'user_type_id' => UserType::USER,
+            ]
+        );
         $user->assignRole('user');
     }
 }
