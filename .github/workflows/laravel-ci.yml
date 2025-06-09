@@ -35,8 +35,8 @@ jobs:
         working-directory: src
 
       - name: Install composer deps
-      - run: composer install
-      - working-directory: src
+        run: composer install
+        working-directory: src
 
       # Node / Vite
       - uses: actions/setup-node@v4
@@ -45,15 +45,19 @@ jobs:
           cache: npm
           cache-dependency-path: "src/package-lock.json"
 
-      - run: npm ci
-      - run: npm run build
-      - working-directory: src
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+        working-directory: src
 
       # Laravel tests
-      - run: php artisan migrate
-      - run: php artisan db:seed
-      - run: ./vendor/bin/phpunit
-      - working-directory: src
+      - name: Run Laravel tests
+        run: |
+          php artisan migrate
+          php artisan db:seed
+          ./vendor/bin/phpunit
+        working-directory: src
 
   # ───────────────────────────────────
   # 2️⃣  DEPLOY  (runs if ci succeeds)
