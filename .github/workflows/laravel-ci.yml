@@ -112,7 +112,7 @@ jobs:
               composer install --no-interaction --prefer-dist
 
             echo "[5/6] npm ci & build (in container)"
-            docker compose exec -T laravel-prim-it bash -c "npm ci && npm run build"
+            docker compose exec -T laravel-prim-it bash -c "npm install && npm run build"
 
             echo "[6/6] Migrate, seed & cache (in container)"
             docker compose exec -T laravel-prim-it php artisan migrate
