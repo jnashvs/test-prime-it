@@ -8,6 +8,7 @@ networks:
 services:
   mariadb-prim-it:
     image: bitnami/mariadb:10.6.19
+    container_name: mariadb-prim-it
     networks:
       - prime-it-laravel-network
     volumes:
