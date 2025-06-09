@@ -7,7 +7,7 @@ on:
 env:
   PHP_VERSION: "8.3"
   NODE_VERSION: "18"
-  PROJECT_DIR: "/opt/test-prime-it/src"
+  PROJECT_DIR: "/opt/test-prime-it"
   DEFAULT_PORT: 22
 
 jobs:
@@ -83,9 +83,8 @@ jobs:
           port:     ${{ env.DEFAULT_PORT }}
           script: |
             set -e
-
             PROJECT_DIR="${{ env.PROJECT_DIR }}"
-
+            
             echo "▶️  Ensure project dir exists"
             if [ ! -d "$PROJECT_DIR" ]; then
               mkdir -p "${PROJECT_DIR%/*}"
@@ -93,26 +92,32 @@ jobs:
               cd "$PROJECT_DIR"
               cp .env.example .env
             fi
-
+            
             cd "$PROJECT_DIR"
-
-            echo "[1/5] git pull"
-            git pull origin main
-
-            echo "[2/5] composer / npm"
-            composer install --no-dev --optimize-autoloader
-            npm ci
-            npm run build
-
-            echo "[3/5] migrations"
-            php artisan migrate --force
-
-            echo "[4/5] seeders"
-            php artisan db:seed --force
-
-            echo "[5/5] cache optimise"
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-
+            
+            echo "[1/6] git pull"
+            git fetch --prune
+            git reset --hard origin/main
+            
+            echo "[2/6] rebuild + (re)start containers"
+            docker compose up -d --build        # builds your bitnami/laravel & vue images
+            
+            echo "[3/6] composer install (in container)"
+            docker compose exec -T laravel-prim-it \
+              composer install --no-dev --optimize-autoloader
+            
+            echo "[4/6] npm ci & build (in container)"
+            docker compose exec -T laravel-prim-it bash -c "npm ci && npm run build"
+            
+            echo "[5/6] migrate & seed (in container)"
+            docker compose exec -T laravel-prim-it \
+              php artisan migrate --force
+            docker compose exec -T laravel-prim-it \
+              php artisan db:seed --force
+            
+            echo "[6/6] cache optimise (in container)"
+            docker compose exec -T laravel-prim-it php artisan config:cache
+            docker compose exec -T laravel-prim-it php artisan route:cache
+            docker compose exec -T laravel-prim-it php artisan view:cache
+            
             echo "✅ Deployment successful!"
