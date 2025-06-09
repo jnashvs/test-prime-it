@@ -87,7 +87,7 @@ jobs:
             
             echo "▶️  Ensure project dir exists"
             if [ ! -d "$PROJECT_DIR" ]; then
-              mkdir -p "${PROJECT_DIR%/*}"
+              mkdir -p "$PROJECT_DIR"
               git clone https://github.com/${{ github.repository }} "${PROJECT_DIR%/*}"
               cd "$PROJECT_DIR"
               cp .env.example .env
