@@ -60,20 +60,21 @@ jobs:
       - name: Verify Secrets are Passed
         run: |
           echo "Username being used: ${{ secrets.ROOT }}"
-          if [ -z "${{ secrets.PASSWORD }}" ]; then
-            echo "❌ SSH_PASSWORD secret is NOT set."
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "❌ SSH_KEY secret is NOT set."
             exit 1
           else
-            echo "✅ SSH_PASSWORD secret is set and will be used."
+            echo "✅ SSH_KEY secret is set and will be used."
           fi
 
       # 🛠️ 2. SIMPLIFIED & FIXED DEPLOYMENT STEP
       - name: Deploy to Server
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.ROOT }}
-          password: ${{ secrets.PASSWORD }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
           script: |
             # Navigate to the correct directory
             cd ~/test-prime-it/src
