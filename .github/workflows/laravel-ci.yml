@@ -90,7 +90,7 @@ jobs:
             if [ ! -d "$PROJECT_DIR" ]; then
               mkdir -p "${PROJECT_DIR%/*}"
               git clone https://github.com/${{ github.repository }} "${PROJECT_DIR%/*}"
-              mv "${PROJECT_DIR%/*}"/* "${PROJECT_DIR%/*}/src"
+              cd "$PROJECT_DIR"
               cp .env.example .env
             fi
 
