@@ -70,20 +70,26 @@ services:
   # JENKINS (added below)
   # ─────────────────────────────
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: ./jenkins/Dockerfile # Path to your custom Jenkins Dockerfile
     container_name: jenkins
     user: root                       # so Jenkins can access the Docker socket
     networks:
       - prime-it-laravel-network
     ports:
-      - "8080:8080"                  # Jenkins UI
+      - "8081:8080"                  # Jenkins UI on host port 8081 (8080 might be used by phpmyadmin)
       - "50000:50000"                # JNLP agent port
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./jenkins_home/init.groovy.d:/var/jenkins_home/init.groovy.d
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock # Mount Docker socket for Dind
     environment:
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false" # Skip initial setup wizard
+    depends_on:
+      - mariadb # Jenkins doesn't directly depend on these for running, but good practice
+      - laravel
 
+# Define the volume for Jenkins data
 volumes:
   jenkins_home:
