@@ -1,18 +1,5 @@
 pipeline {
   agent any
-
-  environment {
-    PHP_VERSION = '8.3'
-    NODE_VERSION = '18'
-    PROJECT_DIR = '/root/test-prime-it'
-    DEFAULT_PORT = '22'
-    COMPOSER_NO_INTERACTION = '1'
-  }
-
-  options {
-    skipDefaultCheckout(true)
-  }
-
   stages {
     stage('Checkout') {
       steps {
@@ -22,7 +9,7 @@ pipeline {
 
     stage('Setup PHP and Composer') {
       steps {
-        dir('src') {
+        dir(path: 'src') {
           sh '''
             sudo update-alternatives --set php /usr/bin/php${PHP_VERSION}
             sudo apt-get update
@@ -32,12 +19,13 @@ pipeline {
             composer install
           '''
         }
+
       }
     }
 
     stage('Setup Node and Build Assets') {
       steps {
-        dir('src') {
+        dir(path: 'src') {
           sh '''
             curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
             sudo apt-get install -y nodejs
@@ -45,18 +33,20 @@ pipeline {
             npm run build
           '''
         }
+
       }
     }
 
     stage('Run Laravel Tests') {
       steps {
-        dir('src') {
+        dir(path: 'src') {
           sh '''
             php artisan migrate
             php artisan db:seed
             ./vendor/bin/phpunit
           '''
         }
+
       }
     }
 
@@ -65,9 +55,9 @@ pipeline {
         branch 'main'
       }
       steps {
-        sshagent(credentials: ['ssh-key-id']) { // Replace with your Jenkins SSH credentials ID
+        sshagent(credentials: ['ssh-key-id']) {
           sh '''
-            ssh -o StrictHostKeyChecking=no -p ${DEFAULT_PORT} ${ROOT}@${HOST} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -p ${DEFAULT_PORT} ${ROOT}@${HOST} << \'EOF\'
               set -e
               PROJECT_DIR="${PROJECT_DIR}"
 
@@ -107,7 +97,19 @@ pipeline {
             EOF
           '''
         }
+
       }
     }
+
+  }
+  environment {
+    PHP_VERSION = '8.3'
+    NODE_VERSION = '18'
+    PROJECT_DIR = '/root/test-prime-it'
+    DEFAULT_PORT = '22'
+    COMPOSER_NO_INTERACTION = '1'
+  }
+  options {
+    skipDefaultCheckout(true)
   }
 }
