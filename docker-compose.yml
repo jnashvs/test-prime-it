@@ -32,7 +32,7 @@ services:
 
   mailhog-prim-it:
     image: mailhog/mailhog
-    container_name: 'mailhog-prim-it'
+    container_name: mailhog-prim-it
     networks:
       - prime-it-laravel-network
     ports:
@@ -65,3 +65,25 @@ services:
         npm install &&
         npm run dev
       "
+
+  # ─────────────────────────────
+  # JENKINS (added below)
+  # ─────────────────────────────
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root                       # so Jenkins can access the Docker socket
+    networks:
+      - prime-it-laravel-network
+    ports:
+      - "8080:8080"                  # Jenkins UI
+      - "50000:50000"                # JNLP agent port
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./jenkins_home/init.groovy.d:/var/jenkins_home/init.groovy.d
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+
+volumes:
+  jenkins_home:
