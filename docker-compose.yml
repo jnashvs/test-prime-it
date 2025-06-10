@@ -86,9 +86,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Mount Docker socket for Dind
     environment:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=false" # Skip initial setup wizard
-    depends_on:
-      - mariadb # Jenkins doesn't directly depend on these for running, but good practice
-      - laravel
 
 # Define the volume for Jenkins data
 volumes:
