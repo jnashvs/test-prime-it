@@ -1,9 +1,10 @@
 pipeline {
   agent {
-    docker {
-      image 'jenkins-agent:php-node'
-      args  '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
-    }
+      dockerfile {
+        filename 'jenkins/Dockerfile'
+        args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
+        label ''
+      }
   }
 
   environment {
