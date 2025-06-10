@@ -1,8 +1,7 @@
 FROM jenkins/jenkins:lts
 
+# Install Docker client and lsb-release
 USER root
-
-# Install Docker CLI and other dependencies (same as before)
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
@@ -12,11 +11,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Add jenkins user to docker group
-RUN groupadd -r docker || true && usermod -aG docker jenkins
+# Create the 'docker' group if it doesn't exist
+# This is crucial because docker-ce-cli doesn't create it
+RUN groupadd -r docker || true
 
-# Install plugins
-COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
-RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+# Add jenkins user to the docker group
+RUN usermod -aG docker jenkins
 
 USER jenkins
