@@ -11,6 +11,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Create the 'docker' group if it doesn't exist
+# This is crucial because docker-ce-cli doesn't create it
+RUN groupadd -r docker || true
+
 # Add jenkins user to the docker group
 RUN usermod -aG docker jenkins
 
