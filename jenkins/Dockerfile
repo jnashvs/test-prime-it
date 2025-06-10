@@ -1,5 +1,5 @@
 # ./jenkins-agent/Dockerfile
-FROM jenkins/jenkins:lts           # Debian 12 (bookworm) base
+FROM jenkins/jenkins:lts
 
 USER root
 
