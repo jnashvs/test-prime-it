@@ -14,7 +14,7 @@ pipeline {
 
     stages {
         /*───────────────────────────*
-         | 1.  Source checkout        |
+         | 0.  Source checkout        |
          *───────────────────────────*/
         stage('Checkout') {
             steps {
@@ -23,7 +23,7 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 2.  Pull latest code       |
+         | 1.  Pull latest code       |
          *───────────────────────────*/
         stage('Remote – Git update') {
             steps {
@@ -42,7 +42,7 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 3.  Ensure network         |
+         | 2.  Ensure network         |
          *───────────────────────────*/
         stage('Remote – Docker network') {
             steps {
@@ -60,7 +60,7 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 4.  Build & start stack    |
+         | 3.  Build & start stack    |
          *───────────────────────────*/
         stage('Remote – Compose build/up') {
             steps {
@@ -78,7 +78,7 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 5.  Composer install       |
+         | 4.  Composer install       |
          *───────────────────────────*/
         stage('Remote – Composer') {
             steps {
@@ -97,7 +97,7 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 6.  NPM / Vite build       |
+         | 5.  NPM / Vite build       |
          *───────────────────────────*/
         stage('Remote – NPM build') {
             steps {
@@ -120,9 +120,9 @@ pipeline {
         }
 
         /*───────────────────────────*
-         | 7.  Artisan tasks / tests  |
+         | 6.  Artisan tasks         |
          *───────────────────────────*/
-        stage('Remote – Artisan & migrate') {
+        stage('Remote – Artisan & migrate & seeder') {
             steps {
                 sshagent(credentials: [CREDENTIALS_ID]) {
                     sh """
@@ -130,15 +130,38 @@ pipeline {
                             set -e
                             echo "[6/7] artisan migrate/seed/cache"
                             cd ${REMOTE_PATH}
-                            # docker compose exec -T ${APP_SERVICE} php artisan test
+                            docker compose exec -T ${APP_SERVICE} php artisan test
                             docker compose exec -T ${APP_SERVICE} php artisan migrate   --force
                             docker compose exec -T ${APP_SERVICE} php artisan db:seed    --force
                             docker compose exec -T ${APP_SERVICE} php artisan config:cache
                             docker compose exec -T ${APP_SERVICE} php artisan route:cache
                             docker compose exec -T ${APP_SERVICE} php artisan view:cache
+                            docker compose exec -T ${APP_SERVICE} php artisan db:seed
                         '
                     """
                 }
+            }
+        }
+    }
+
+    /*───────────────────────────*
+     | 6.  Tests                 |
+     *───────────────────────────*/
+    stage('Remote – Tests: Unit & Feature') {
+        steps {
+            sshagent(credentials: [CREDENTIALS_ID]) {
+                sh """
+                    ssh ${SSH_OPTS} ${REMOTE_USER}@${REMOTE_HOST} '
+                        set -e
+                        cd ${REMOTE_PATH}
+
+                        echo "[7/7] prepare SQLite for testing"
+                        docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/database.sqlite"
+
+                        echo "[7/7] running tests"
+                        docker compose exec -T ${APP_SERVICE} bash -c "APP_ENV=testing php artisan test"
+                    '
+                """
             }
         }
     }
