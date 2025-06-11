@@ -82,4 +82,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       TZ: Europe/Lisbon
-      JAVA_OPTS: "-Xms512m -Xmx1024m"
+      JAVA_OPTS: "-Xms256m -Xmx384m"
