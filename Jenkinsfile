@@ -105,10 +105,14 @@ pipeline {
                     sh """
                         ssh ${SSH_OPTS} ${REMOTE_USER}@${REMOTE_HOST} '
                             set -e
-                            echo "[5/7] npm ci & build"
+                            echo "[5/7] NPM clean, ci & build"
                             cd ${REMOTE_PATH}
-                            docker compose exec -T ${APP_SERVICE} \\
-                                bash -c "npm ci && npm run build"
+
+                            docker compose exec -T ${APP_SERVICE} \
+                                bash -c "rm -rf node_modules \\
+                                         && npm cache clean --force \\
+                                         && npm ci --no-audit \\
+                                         && npm run build"
                         '
                     """
                 }
