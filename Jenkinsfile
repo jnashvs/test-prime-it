@@ -36,17 +36,21 @@ pipeline {
                         echo '[4/7] compose up --build'
                         docker compose up -d --build
 
+                        echo '[5/7] composer install'
+                        docker compose exec --no-stdin -T laravel-prim-it \
+                          composer install --no-interaction --prefer-dist
+
                         echo '[6/7] npm ci & build'
-                        docker compose exec -T laravel-prim-it \
+                        docker compose exec --no-stdin -T laravel-prim-it \
                           bash -c 'npm ci && npm run build'
 
                         echo '[7/7] tests and artisan tasks'
-                        docker compose exec -T laravel-prim-it php artisan test
-                        docker compose exec -T laravel-prim-it php artisan migrate --force
-                        docker compose exec -T laravel-prim-it php artisan db:seed --force
-                        docker compose exec -T laravel-prim-it php artisan config:cache
-                        docker compose exec -T laravel-prim-it php artisan route:cache
-                        docker compose exec -T laravel-prim-it php artisan view:cache
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan test
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan migrate --force
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan db:seed --force
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan config:cache
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan route:cache
+                        docker compose exec --no-stdin -T laravel-prim-it php artisan view:cache
 
                         echo '✅  Deployment complete'
                         EOSSH
