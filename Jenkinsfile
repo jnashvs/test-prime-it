@@ -1,9 +1,6 @@
 pipeline {
     agent any
-
-    triggers {
-        githubPush()
-    }
+    triggers { githubPush() }
 
     environment {
         REMOTE_HOST = '64.227.116.13'
@@ -18,40 +15,36 @@ pipeline {
             }
         }
 
-        stage('Deploy on Remote Server') {
+        stage('Deploy on remote') {
             steps {
                 sshagent(credentials: ['digitalocean-ssh']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} bash -s <<'ENDSSH'
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} <<'EOSSH'
                         set -e
 
-                        echo '[1/7] Change to project directory'
-                        cd ${REMOTE_PATH}
+                        echo '[1/7] cd project'
+                        cd '${REMOTE_PATH}'
 
-                        echo '[2/7] Pull latest code from Git'
+                        echo '[2/7] git pull'
                         git fetch --prune
                         git reset --hard origin/main
 
-                        echo '[3/7] Ensure Docker network exists'
+                        echo '[3/7] ensure Docker network'
                         docker network inspect prime-it-laravel-network >/dev/null 2>&1 || \
                           docker network create prime-it-laravel-network
 
-                        echo '[4/7] Rebuild and start Docker containers'
+                        echo '[4/7] compose up --build'
                         docker compose up -d --build
 
-                        echo '[5/7] Run Composer install'
-                        if ! docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist || true; then
-                          echo 'Composer install failed'
-                          exit 1
-                        fi
+                        echo '[5/7] composer install'
+                        docker compose exec -T laravel-prim-it \
+                          composer install --no-interaction --prefer-dist
 
-                        echo '[6/7] Run npm install and build'
-                        if ! docker compose exec -T laravel-prim-it bash -c 'npm install && npm run build'; then
-                          echo 'npm install or build failed'
-                          exit 1
-                        fi
+                        echo '[6/7] npm ci & build'
+                        docker compose exec -T laravel-prim-it \
+                          bash -c 'npm ci && npm run build'
 
-                        echo '[7/7] Run tests and Laravel commands'
+                        echo '[7/7] tests and artisan tasks'
                         docker compose exec -T laravel-prim-it php artisan test
                         docker compose exec -T laravel-prim-it php artisan migrate --force
                         docker compose exec -T laravel-prim-it php artisan db:seed --force
@@ -59,8 +52,8 @@ pipeline {
                         docker compose exec -T laravel-prim-it php artisan route:cache
                         docker compose exec -T laravel-prim-it php artisan view:cache
 
-                        echo '✅ Deployment complete.'
-                        ENDSSH
+                        echo '✅  Deployment complete'
+                        EOSSH
                     """
                 }
             }
