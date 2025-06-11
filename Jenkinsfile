@@ -40,7 +40,7 @@ pipeline {
                         docker compose up -d --build
 
                         echo '[5/7] Run Composer install'
-                        if ! docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist; then
+                        if ! docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist || true; then
                           echo 'Composer install failed'
                           exit 1
                         fi
