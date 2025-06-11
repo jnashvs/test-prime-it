@@ -142,26 +142,26 @@ pipeline {
                 }
             }
         }
-    }
 
-    /*───────────────────────────*
-     | 6.  Tests                 |
-     *───────────────────────────*/
-    stage('Remote – Tests: Unit & Feature') {
-        steps {
-            sshagent(credentials: [CREDENTIALS_ID]) {
-                sh """
-                    ssh ${SSH_OPTS} ${REMOTE_USER}@${REMOTE_HOST} '
-                        set -e
-                        cd ${REMOTE_PATH}
+        /*───────────────────────────*
+         | 6.  Tests                 |
+         *───────────────────────────*/
+        stage('Remote – Tests: Unit & Feature') {
+            steps {
+                sshagent(credentials: [CREDENTIALS_ID]) {
+                    sh """
+                        ssh ${SSH_OPTS} ${REMOTE_USER}@${REMOTE_HOST} '
+                            set -e
+                            cd ${REMOTE_PATH}
 
-                        echo "[7/7] prepare SQLite for testing"
-                        docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/database.sqlite"
+                            echo "[7/7] prepare SQLite for testing"
+                            docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/database.sqlite"
 
-                        echo "[7/7] running tests"
-                        docker compose exec -T ${APP_SERVICE} bash -c "APP_ENV=testing php artisan test"
-                    '
-                """
+                            echo "[7/7] running tests"
+                            docker compose exec -T ${APP_SERVICE} bash -c "APP_ENV=testing php artisan test"
+                        '
+                    """
+                }
             }
         }
     }
