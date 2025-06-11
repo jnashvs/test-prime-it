@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-      githubPush()
+        githubPush()
     }
 
     environment {
@@ -21,6 +21,18 @@ pipeline {
 
         stage('Deploy on Remote Server') {
             steps {
+                /**
+                 * 1.  sshagent loads the private key you added in
+                 *     Manage Jenkins → Credentials (ID = digitalocean-ssh).
+                 *
+                 * 2.  The sh """ … """ block uses *double* quotes so Groovy can
+                 *     expand ${REMOTE_*} variables **before** the shell runs.
+                 *
+                 * 3.  Inside ssh we use a **here-doc** (<<'ENDSSH') that is
+                 *     single-quoted, which prevents the *remote* shell from
+                 *     re-expanding any $ variables or `\` escapes.  Everything
+                 *     between ENDSSH … ENDSSH is executed on the droplet.
+                 */
                 sshagent(credentials: ['digitalocean-ssh']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} bash -s <<'ENDSSH'
@@ -46,6 +58,9 @@ pipeline {
                         echo '[5/6] npm install & build'
                         docker compose exec -T laravel-prim-it \
                           bash -c 'npm install && npm run build'
+
+                        echo 'run the test'
+                        docker compose exec -T laravel-prim-it php artisan test
 
                         echo '[6/6] Migrate, seed & cache'
                         docker compose exec -T laravel-prim-it php artisan migrate --force
