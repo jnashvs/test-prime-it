@@ -52,12 +52,18 @@ pipeline {
                         docker compose up -d --build
 
                         echo '[4/6] Composer install'
-                        docker compose exec -T laravel-prim-it \
-                          composer install --no-interaction --prefer-dist
+                        try {
+                            sh "docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist"
+                        } catch (e) {
+                            error "Composer install failed: ${e}"
+                        }
 
                         echo '[5/6] npm install & build'
-                        docker compose exec -T laravel-prim-it \
-                          bash -c 'npm install && npm run build'
+                        try {
+                            sh "docker compose exec -T laravel-prim-it bash -c 'npm install && npm run build'"
+                        } catch (e) {
+                            error "npm install/build failed: ${e}"
+                        }
 
                         echo 'run the test'
                         docker compose exec -T laravel-prim-it php artisan test
