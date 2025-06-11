@@ -12,7 +12,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/jnashvs/test-prime-it.git', branch: 'main'
@@ -21,59 +20,46 @@ pipeline {
 
         stage('Deploy on Remote Server') {
             steps {
-                /**
-                 * 1.  sshagent loads the private key you added in
-                 *     Manage Jenkins → Credentials (ID = digitalocean-ssh).
-                 *
-                 * 2.  The sh """ … """ block uses *double* quotes so Groovy can
-                 *     expand ${REMOTE_*} variables **before** the shell runs.
-                 *
-                 * 3.  Inside ssh we use a **here-doc** (<<'ENDSSH') that is
-                 *     single-quoted, which prevents the *remote* shell from
-                 *     re-expanding any $ variables or `\` escapes.  Everything
-                 *     between ENDSSH … ENDSSH is executed on the droplet.
-                 */
                 sshagent(credentials: ['digitalocean-ssh']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} bash -s <<'ENDSSH'
                         set -e
 
+                        echo '[1/7] Change to project directory'
                         cd ${REMOTE_PATH}
 
-                        echo '[1/6] Git pull'
+                        echo '[2/7] Pull latest code from Git'
                         git fetch --prune
                         git reset --hard origin/main
 
-                        echo '[2/6] Ensure Docker network'
+                        echo '[3/7] Ensure Docker network exists'
                         docker network inspect prime-it-laravel-network >/dev/null 2>&1 || \
                           docker network create prime-it-laravel-network
 
-                        echo '[3/6] Rebuild & (re)start containers'
+                        echo '[4/7] Rebuild and start Docker containers'
                         docker compose up -d --build
 
-                        echo '[4/6] Composer install'
-                        try {
-                            sh "docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist"
-                        } catch (e) {
-                            error "Composer install failed: ${e}"
-                        }
+                        echo '[5/7] Run Composer install'
+                        if ! docker compose exec -T laravel-prim-it composer install --no-interaction --prefer-dist; then
+                          echo 'Composer install failed'
+                          exit 1
+                        fi
 
-                        echo '[5/6] npm install & build'
-                        try {
-                            sh "docker compose exec -T laravel-prim-it bash -c 'npm install && npm run build'"
-                        } catch (e) {
-                            error "npm install/build failed: ${e}"
-                        }
+                        echo '[6/7] Run npm install and build'
+                        if ! docker compose exec -T laravel-prim-it bash -c 'npm install && npm run build'; then
+                          echo 'npm install or build failed'
+                          exit 1
+                        fi
 
-                        echo 'run the test'
+                        echo '[7/7] Run tests and Laravel commands'
                         docker compose exec -T laravel-prim-it php artisan test
-
-                        echo '[6/6] Migrate, seed & cache'
                         docker compose exec -T laravel-prim-it php artisan migrate --force
                         docker compose exec -T laravel-prim-it php artisan db:seed --force
                         docker compose exec -T laravel-prim-it php artisan config:cache
                         docker compose exec -T laravel-prim-it php artisan route:cache
                         docker compose exec -T laravel-prim-it php artisan view:cache
+
+                        echo '✅ Deployment complete.'
                         ENDSSH
                     """
                 }

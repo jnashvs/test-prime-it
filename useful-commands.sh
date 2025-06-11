@@ -13,3 +13,5 @@ sudo chmod -R 775 ~/test-prime-it/db
 
 sudo chown -R 1000:1000 ./jenkins_home
 ls -ld ./jenkins_home
+
+apt-get update && apt-get install -y nano
