@@ -44,22 +44,23 @@ pipeline {
                         docker compose exec -T laravel-prim-it \\
                           bash -c 'npm ci && npm run build' && \\
 
-                        echo '[7/7] tests and artisan tasks' && \\
-                        # --- TEMPORARY DEBUGGING STEPS START ---
-                        echo '--- DEBUG: Checking environment inside laravel-prim-it container ---' && \\
-                        docker compose exec -T laravel-prim-it printenv | grep DB_CONNECTION && \\
-                        docker compose exec -T laravel-prim-it printenv | grep DB_DATABASE && \\
-                        docker compose exec -T laravel-prim-it php artisan config:clear && \\
-                        docker compose exec -T laravel-prim-it php artisan env && \\
-                        docker compose exec -T laravel-prim-it php artisan about --env=testing && \\
-                        echo '--- DEBUG: End of environment check ---' && \\
-                        # --- TEMPORARY DEBUGGING STEPS END ---
-                        # docker compose exec -T laravel-prim-it php artisan test && \\
-                        docker compose exec -T laravel-prim-it php artisan migrate --force && \\
-                        docker compose exec -T laravel-prim-it php artisan db:seed --force && \\
-                        docker compose exec -T laravel-prim-it php artisan config:cache && \\
-                        docker compose exec -T laravel-prim-it php artisan route:cache && \\
-                        docker compose exec -T laravel-prim-it php artisan view:cache && \\
+                        echo '[7/7] tests and artisan tasks'
+                        # --- MODIFIED DEBUGGING STEPS ---
+                        echo '--- DEBUG: Checking environment inside laravel-prim-it container ---'
+                        docker compose exec -T laravel-prim-it bash -c "printenv | grep DB_CONNECTION"
+                        docker compose exec -T laravel-prim-it bash -c "printenv | grep DB_DATABASE"
+                        docker compose exec -T laravel-prim-it php artisan config:clear
+                        docker compose exec -T laravel-prim-it php artisan env
+                        docker compose exec -T laravel-prim-it php artisan about --env=testing
+                        echo '--- DEBUG: End of environment check ---'
+
+                        # Actual test and artisan commands
+                        docker compose exec -T laravel-prim-it php artisan test
+                        docker compose exec -T laravel-prim-it php artisan migrate --force
+                        docker compose exec -T laravel-prim-it php artisan db:seed --force
+                        docker compose exec -T laravel-prim-it php artisan config:cache
+                        docker compose exec -T laravel-prim-it php artisan route:cache
+                        docker compose exec -T laravel-prim-it php artisan view:cache
 
                         echo '✅  Deployment complete'
                         EOSSH
