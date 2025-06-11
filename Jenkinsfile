@@ -36,10 +36,6 @@ pipeline {
                         echo '[4/7] compose up --build'
                         docker compose up -d --build
 
-                        echo '[5/7] composer install'
-                        docker compose exec -T laravel-prim-it \
-                          composer install --no-interaction --prefer-dist
-
                         echo '[6/7] npm ci & build'
                         docker compose exec -T laravel-prim-it \
                           bash -c 'npm ci && npm run build'
