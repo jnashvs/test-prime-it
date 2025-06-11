@@ -130,7 +130,6 @@ pipeline {
                             set -e
                             echo "[6/7] artisan migrate/seed/cache"
                             cd ${REMOTE_PATH}
-                            docker compose exec -T ${APP_SERVICE} php artisan test
                             docker compose exec -T ${APP_SERVICE} php artisan migrate   --force
                             docker compose exec -T ${APP_SERVICE} php artisan db:seed    --force
                             docker compose exec -T ${APP_SERVICE} php artisan config:cache
@@ -155,10 +154,12 @@ pipeline {
                             cd ${REMOTE_PATH}
 
                             echo "[7/7] prepare SQLite for testing"
-                            docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/database.sqlite"
+                            docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/testing.sqlite"
+                            docker compose exec -T ${APP_SERVICE} chmod 777 database/testing.sqlite
+                            docker compose exec -T ${APP_SERVICE} php artisan config:clear
 
                             echo "[7/7] running tests"
-                            docker compose exec -T ${APP_SERVICE} bash -c "APP_ENV=testing php artisan test"
+                            docker compose exec -T ${APP_SERVICE} bash -c "php artisan test --env=testing"
                         '
                     """
                 }
