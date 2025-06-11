@@ -1,17 +1,12 @@
-FROM ubuntu:22.04
+FROM jenkins/jenkins:centos7
 
-ENV DEBIAN_FRONTEND=noninteractive
+USER root
 
-RUN apt-get update -y && \
-    apt-get install -y software-properties-common ca-certificates curl git && \
-    add-apt-repository ppa:ondrej/php -y && \
-    apt-get update -y && \
-    apt-get install -y php8.3 php8.3-sqlite3 php8.3-zip php8.3-mbstring php8.3-xml php8.3-curl php8.3-bcmath && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set working directory for the Jenkins agent to match the pipeline's expectations
-WORKDIR /var/jenkins_home/workspace
+RUN yum -y install epel-release
+RUN rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+RUN yum-config-manager --enable remi-php74
+RUN yum install php php-mbstring php-xml php-pdo php-pdo_mysql php-xdebug -y
+RUN yum update -y
+RUN cd /tmp
+RUN curl -sS https://getcomposer.org/installer | php
+RUN mv composer.phar /usr/local/bin/composer
