@@ -155,12 +155,15 @@ pipeline {
                             cd ${REMOTE_PATH}
 
                             echo "[7/7] prepare SQLite for testing"
-                            docker compose exec -T ${APP_SERVICE} bash -c "touch /app/database/testing.sqlite"
-                            docker compose exec -T ${APP_SERVICE} chmod 777 database/testing.sqlite
-                            docker compose exec -T ${APP_SERVICE} php artisan config:clear
+                            docker compose exec -T ${APP_SERVICE} bash -c "
+                              touch database/testing.sqlite &&
+                              chmod 777 database/testing.sqlite &&
+                              cp .env.testing .env &&
+                              php artisan config:clear
+                            "
 
                             echo "[7/7] running tests"
-                            docker compose exec -T ${APP_SERVICE} bash -c "php artisan test --env=testing"
+                            docker compose exec -T ${APP_SERVICE} php artisan test --env=testing
                         '
                     """
                 }
