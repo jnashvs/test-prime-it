@@ -10,6 +10,7 @@ pipeline {
         CREDENTIALS_ID   = 'digitalocean-ssh'
         NETWORK_NAME     = 'prime-it-laravel-network'
         APP_SERVICE      = 'laravel-prim-it'
+        NODE_OPTIONS = '--max-old-space-size=4096'
     }
 
     stages {
@@ -110,9 +111,9 @@ pipeline {
 
                             docker compose exec -T ${APP_SERVICE} \
                                 bash -c "rm -rf node_modules \\
-                                         && npm cache clean --force \\
-                                         && npm ci --no-audit \\
-                                         && npm run build"
+                                && npm cache clean --force \\
+                                && NODE_OPTIONS=\\\"${NODE_OPTIONS}\\\" npm ci --no-audit \\
+                                && NODE_OPTIONS=\\\"${NODE_OPTIONS}\\\" npm run build"
                         '
                     """
                 }
